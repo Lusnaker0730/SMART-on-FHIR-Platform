@@ -1,0 +1,42 @@
+{
+  "name": "cds-playground",
+  "version": "1.0.0",
+  "description": "SMART on FHIR Clinical Decision Support (CDS) Hooks Playground Application",
+  "main": "script.js",
+  "scripts": {
+    "start": "http-server -p 8085 -a localhost -c-1",
+    "dev": "http-server -p 8085 -a localhost -c-1 -o",
+    "dev-secure": "http-server -p 8443 -c-1 -o -S -C cert.pem -K key.pem",
+    "dev-cors": "http-server -p 8081 -c-1 -o --cors",
+    "build": "echo 'No build process required for static files'",
+    "test": "echo 'No tests specified'"
+  },
+  "keywords": [
+    "smart-on-fhir",
+    "fhir",
+    "cds-hooks",
+    "clinical-decision-support",
+    "healthcare",
+    "ehr",
+    "medical"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {
+    "fhirclient": "^2.5.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/cds-playground.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/cds-playground/issues"
+  },
+  "homepage": "https://github.com/your-username/cds-playground#readme"
+} 

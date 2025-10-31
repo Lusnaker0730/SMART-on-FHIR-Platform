@@ -1,0 +1,110 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0.6
+    container_name: keycloak
+    ports:
+      - "8082:8080"
+    # depends_on:
+    #   - postgres
+    environment:
+      # KC_DB: postgres
+      # KC_DB_URL_HOST: postgres
+      # KC_DB_URL_DATABASE: keycloak
+      # KC_DB_USERNAME: keycloak
+      # KC_DB_PASSWORD: keycloak123
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command:
+      - start-dev
+    networks:
+      - fhir-net
+    restart: always
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -f http://localhost:8080/realms/master || exit 1"]
+    #   interval: 10s
+    #   retries: 5
+    #   timeout: 5s
+
+  smart-launcher:
+    image: smartonfhir/smart-launcher:latest
+    container_name: smart-launcher
+    ports:
+      - "9009:80"
+    environment:
+      BASE_URL: http://localhost:9009
+      FHIR_SERVER_R4: http://localhost:8080/fhir # FHIR Server Change
+      PICKER_CONFIG_R4: r4
+      PICKER_ORIGIN: http://localhost:9009
+    networks:
+      - fhir-net
+
+  hapi-fhir:
+    build: ./fhir-server
+    container_name: hapi-fhir-oauth
+    depends_on:
+      # postgres:
+      #   condition: service_healthy
+      keycloak:
+        condition: service_started
+    ports:
+      - "8080:8080"  # FHIR Server Change
+    volumes:
+      - ./fhir-server/hapi.properties:/opt/hapi-fhir/hapi.properties
+    environment:
+      # OAuth2 / Keycloak
+      HAPI_OAUTH_ENABLED: "true"
+      HAPI_OAUTH_ISSUER: "http://keycloak:8082/realms/fhir"
+      HAPI_OAUTH_TOKEN_ENDPOINT: "http://keycloak:8082/realms/fhir/protocol/openid-connect/token"
+      HAPI_OAUTH_AUTHORIZATION_ENDPOINT: "http://keycloak:8082/realms/fhir/protocol/openid-connect/auth"
+      # PostgreSQL 連線設定
+      # HAPI_FHIR_DATABASE_TYPE: postgresql
+      # HAPI_FHIR_SQL_SCHEMA_UPDATE: true
+      # HAPI_FHIR_AUTO_CREATE_SCHEMA: true
+      # HAPI_FHIR_AUTO_CREATE_DATABASE: true
+      # HAPI_FHIR_DB_DRIVER: org.postgresql.Driver
+      # HAPI_FHIR_DB_URL: jdbc:postgresql://postgres:5432/hapi
+      # HAPI_FHIR_DB_USER: fhir
+      # HAPI_FHIR_DB_PASSWORD: fhir123
+    networks:
+      - fhir-net
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl -f http://localhost:8080/fhir/metadata || exit 1"] 
+    #   interval: 10s
+    #   retries: 10
+    #   timeout: 5s
+
+    
+
+  # postgres:
+  #   image: postgres:15
+  #   container_name: postgres
+  #   restart: always
+  #   environment:
+  #     POSTGRES_DB: "hapi"
+  #     POSTGRES_USER: "admin"
+  #     POSTGRES_PASSWORD: "admin"
+  #   volumes:
+  #     - postgres:/var/lib/postgresql/data   # 確保資料持久化
+  #     - ./init-db:/docker-entrypoint-initdb.d  # 初始化 fhir user
+  #   networks:
+  #     - fhir-net
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U keycloak"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 10
+
+  platform:
+    build: ./platform
+    container_name: smart-platform
+    ports:
+      - "8085:8085"
+    networks:
+      - fhir-net
+
+# volumes:
+#   postgres:
+
+networks:
+  fhir-net:
+    driver: bridge

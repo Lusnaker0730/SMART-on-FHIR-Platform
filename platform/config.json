@@ -1,0 +1,95 @@
+{
+  "servers": {
+    "smart-health-it": {
+      "name": "SMART Health IT R4",
+      "description": "官方 SMART on FHIR 測試服務器",
+      "fhirServiceUrl": "https://r4.smarthealthit.org",
+      "scope": "launch openid fhirUser patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read",
+      "clientId": "smart_cds_platform",
+      "requiresAuth": true,
+      "patientIds": [
+        "87a339d0-8cae-418e-89c7-8651e6aab3c6",
+        "a6889c6d-6915-4fdd-bb80-85c2f54a2969",
+        "example-patient-id"
+      ]
+    },
+    "smart-health-it-r3": {
+      "name": "SMART Health IT R3",
+      "description": "SMART on FHIR R3 測試服務器",
+      "fhirServiceUrl": "https://r3.smarthealthit.org",
+      "scope": "launch openid fhirUser patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read",
+      "clientId": "smart_cds_platform",
+      "requiresAuth": true,
+      "patientIds": [
+        "smart-1288992",
+        "smart-1186747",
+        "smart-1642068"
+      ]
+    },
+    "hapi-fhir": {
+      "name": "HAPI FHIR Test Server",
+      "description": "公開的 HAPI FHIR 測試服務器",
+      "fhirServiceUrl": "https://hapi.fhir.org/baseR4",
+      "scope": "patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read",
+      "clientId": "smart_cds_platform",
+      "requiresAuth": false,
+      "patientIds": [
+        "example-patient-1",
+        "example-patient-2"
+      ]
+    },
+    "local-hapi": {
+      "name": "Local HAPI Server",
+      "description": "本地 HAPI FHIR 服務器",
+      "fhirServiceUrl": "http://localhost:8080/fhir",
+      "scope": "patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read",
+      "clientId": "smart_cds_platform",
+      "requiresAuth": false,
+      "patientIds": [
+        "patient-1",
+        "patient-2"
+      ]
+    },
+    "cerner-sandbox": {
+      "name": "Cerner Sandbox",
+      "description": "Cerner 開發者沙盒環境",
+      "fhirServiceUrl": "https://fhir-myrecord.cerner.com/dstu2/ec2458f2-1e24-41c8-b71b-0e701af7583d",
+      "scope": "launch openid fhirUser patient/Patient.read patient/Observation.read patient/Condition.read",
+      "clientId": "YOUR_CERNER_CLIENT_ID",
+      "requiresAuth": true,
+      "patientIds": [
+        "12724066",
+        "12724067"
+      ]
+    },
+    "epic-sandbox": {
+      "name": "Epic Sandbox",
+      "description": "Epic 開發者沙盒環境",
+      "fhirServiceUrl": "https://fhir.epic.com/interconnect-fhir-oauth/api/FHIR/R4",
+      "scope": "launch openid fhirUser patient/*.read",
+      "clientId": "YOUR_EPIC_CLIENT_ID",
+      "requiresAuth": true,
+      "patientIds": [
+        "Tbt3KuCY0B5PSrJvCu2j-PlK.aiHsu2xUjUM8bWpetXoB",
+        "example-epic-patient"
+      ]
+    }
+  },
+  "defaultServer": "smart-health-it",
+  "debugMode": true,
+  "timeout": 30000,
+  "retryAttempts": 3,
+  "features": {
+    "enableCDSHooks": true,
+    "enableSMARTApps": true,
+    "enableObservationTrends": true,
+    "enableMedicationChecks": true,
+    "enableRiskCalculations": true
+  },
+  "ui": {
+    "theme": "default",
+    "language": "zh-TW",
+    "showDebugInfo": true,
+    "autoRefreshInterval": 300000
+  }
+} 

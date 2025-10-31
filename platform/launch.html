@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART 平台 - 啟動中</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+        .launch-container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="launch-container">
+        <h1>🏥 SMART 平台</h1>
+        <div class="spinner"></div>
+        <p>正在初始化 SMART on FHIR 連接...</p>
+        <p>請稍候，系統正在與 EHR 建立連接</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/fhirclient/build/fhir-client.js"></script>
+    <script>
+        console.log('SMART Launch 開始...');
+        
+        // 獲取 URL 參數
+        const urlParams = new URLSearchParams(window.location.search);
+        const iss = urlParams.get('iss');
+        const launch = urlParams.get('launch');
+        
+        console.log('Launch 參數:', { iss, launch });
+        
+        // 檢查是否為 EHR Launch（有 iss 和 launch 參數）或 Standalone Launch
+        if (iss && launch) {
+            // EHR Launch - 從 EHR 啟動
+            console.log('EHR Launch 模式');
+            updateStatus('從 EHR 系統啟動中...', '正在驗證 EHR 授權參數');
+            
+            FHIR.oauth2.authorize({
+                clientId: "smart_cds_platform",
+                scope: "launch openid fhirUser patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read",
+                redirectUri: "./index.html",
+                iss: iss,
+                launch: launch
+            });
+            
+        } else if (iss) {
+            // Standalone Launch with ISS - 獨立啟動但有指定 FHIR 服務器
+            console.log('Standalone Launch 模式 (指定服務器)');
+            updateStatus('獨立啟動模式', '連接到指定的 FHIR 服務器');
+            
+            FHIR.oauth2.authorize({
+                clientId: "smart_cds_platform",
+                scope: "openid fhirUser patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read",
+                redirectUri: "./index.html",
+                iss: iss
+            });
+            
+        } else {
+            // 完全獨立啟動 - 使用預設測試服務器
+            console.log('預設測試模式');
+            updateStatus('測試模式啟動', '連接到 SMART Health IT 測試服務器');
+            
+            FHIR.oauth2.authorize({
+                clientId: "smart_cds_platform",
+                scope: "openid fhirUser patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read",
+                redirectUri: "./index.html",
+                iss: "https://r4.smarthealthit.org"
+            });
+        }
+
+        // 更新狀態顯示
+        function updateStatus(title, subtitle) {
+            const container = document.querySelector('.launch-container');
+            container.querySelector('p:first-of-type').textContent = title;
+            container.querySelector('p:last-of-type').textContent = subtitle;
+        }
+
+        // 錯誤處理
+        window.addEventListener('error', function(e) {
+            console.error('SMART 啟動錯誤:', e.error);
+            
+            // 檢查是否為 Web Crypto API 相關錯誤
+            const isSecureContextError = e.error?.message?.includes('secure context') || 
+                                       e.error?.message?.includes('subtle crypto');
+            
+            if (isSecureContextError) {
+                document.querySelector('.launch-container').innerHTML = `
+                    <h1>🏥 SMART 平台</h1>
+                    <div style="color: #f39c12; margin: 20px 0;">
+                        <i class="fas fa-shield-alt"></i>
+                        <p>安全上下文要求</p>
+                    </div>
+                    <p><strong>解決方案：</strong></p>
+                    <div style="text-align: left; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                        <p>• 確保應用運行在 <code>localhost</code> 或 <code>127.0.0.1</code></p>
+                        <p>• 當前 URL: <code>${window.location.href}</code></p>
+                        <p>• 建議的 URL: <code>http://localhost:8081/launch.html${window.location.search}</code></p>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                        <button onclick="window.location.href='http://localhost:8081/launch.html${window.location.search}'" 
+                                style="padding: 10px 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            使用 localhost
+                        </button>
+                        <button onclick="bypassSecurityCheck()" 
+                                style="padding: 10px 15px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            跳過安全檢查
+                        </button>
+                        <button onclick="window.location.reload()" 
+                                style="padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                            重新嘗試
+                        </button>
+                    </div>
+                `;
+            } else {
+                document.querySelector('.launch-container').innerHTML = `
+                    <h1>🏥 SMART 平台</h1>
+                    <div style="color: #e74c3c; margin: 20px 0;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>啟動失敗</p>
+                    </div>
+                    <p>錯誤: ${e.error?.message || '未知錯誤'}</p>
+                    <p>Launch 參數: iss=${iss || '無'}, launch=${launch || '無'}</p>
+                    <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        重新嘗試
+                    </button>
+                `;
+            }
+        });
+
+        // 跳過安全檢查的函數
+        function bypassSecurityCheck() {
+            updateStatus('正在啟用兼容模式...', '跳過 Web Crypto API 安全檢查');
+            
+            try {
+                // 嘗試使用簡化的授權流程
+                const authUrl = iss + '/authorize?' + 
+                    'response_type=code&' +
+                    'client_id=smart_cds_platform&' +
+                    'redirect_uri=' + encodeURIComponent('./index.html') + '&' +
+                    'scope=' + encodeURIComponent('openid fhirUser patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read') +
+                    (launch ? '&launch=' + encodeURIComponent(launch) : '');
+                
+                console.log('兼容模式授權 URL:', authUrl);
+                window.location.href = authUrl;
+                
+            } catch (error) {
+                console.error('兼容模式啟動失敗:', error);
+                document.querySelector('.launch-container').innerHTML = `
+                    <h1>🏥 SMART 平台</h1>
+                    <div style="color: #e74c3c; margin: 20px 0;">
+                        <i class="fas fa-times-circle"></i>
+                        <p>兼容模式失敗</p>
+                    </div>
+                    <p>請使用 HTTPS 或正確的 localhost 環境</p>
+                    <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        重新嘗試
+                    </button>
+                `;
+            }
+        }
+
+        // 超時處理
+        setTimeout(() => {
+            if (window.location.href === window.location.href) {
+                console.warn('Launch 超時');
+                updateStatus('連接超時', '請檢查網路連線或重試');
+            }
+        }, 10000);
+    </script>
+</body>
+</html> 

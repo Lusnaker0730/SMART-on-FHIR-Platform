@@ -1,0 +1,59 @@
+{
+  "upload_time": "2025-10-30T04:20:25.473869",
+  "server_url": "http://localhost:8080/fhir/",
+  "version": "web_ui",
+  "statistics": {
+    "patients": 2,
+    "conditions": 6,
+    "observations": 6,
+    "medications": 4,
+    "medication_requests": 4,
+    "errors": 0
+  },
+  "results": [
+    {
+      "patient": "21",
+      "conditions": [
+        "22",
+        "23",
+        "24"
+      ],
+      "observations": [
+        "25",
+        "26",
+        "27"
+      ],
+      "medications": [
+        "28",
+        "29"
+      ],
+      "medication_requests": [
+        "30",
+        "31"
+      ],
+      "errors": []
+    },
+    {
+      "patient": "32",
+      "conditions": [
+        "33",
+        "34",
+        "35"
+      ],
+      "observations": [
+        "36",
+        "37",
+        "38"
+      ],
+      "medications": [
+        "39",
+        "40"
+      ],
+      "medication_requests": [
+        "41",
+        "42"
+      ],
+      "errors": []
+    }
+  ]
+}
