@@ -1,0 +1,16 @@
+node_modules
+
+test/e2e/bin
+test/e2e/reports
+test/e2e/screenshots
+selenium-debug.log
+
+!.gitkeep
+.vscode
+coverage
+.nyc_output
+test/e2e/selenium-server.log
+test/e2e/bin/chromedriver
+test/e2e/bin/selenium.jar
+test/e2e/reports/login-screen.xml
+test/e2e/reports/main.xml
