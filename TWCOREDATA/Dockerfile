@@ -1,51 +1,59 @@
-# syntax=docker/dockerfile:1
+# 台灣 FHIR 病人資料生成器 - 標準 Docker 映像
+# Taiwan FHIR Patient Data Generator - Standard Docker Image
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
+FROM python:3.11-slim-bookworm
 
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
+# 設定標籤
+LABEL maintainer="Taiwan FHIR Generator Team" \
+      version="2.2.0" \
+      description="Taiwan FHIR Patient Data Generator"
 
-ARG PYTHON_VERSION=3.13.7
-FROM python:${PYTHON_VERSION}-slim as base
+# 設定環境變數
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_ENV=production \
+    PYTHONFAULTHANDLER=1 \
+    PYTHONHASHSEED=random
 
-# Prevents Python from writing pyc files.
-ENV PYTHONDONTWRITEBYTECODE=1
+# 安裝系統依賴
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Keeps Python from buffering stdout and stderr to avoid situations where
-# the application crashes without emitting any logs due to buffering.
-ENV PYTHONUNBUFFERED=1
-
+# 設定工作目錄
 WORKDIR /app
 
-# Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/go/dockerfile-user-best-practices/
-ARG UID=10001
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    appuser
+# 複製requirements並安裝Python依賴
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Download dependencies as a separate step to take advantage of Docker's caching.
-# Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
-# Leverage a bind mount to requirements.txt to avoid having to copy them into
-# into this layer.
-RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=bind,source=requirements.txt,target=requirements.txt \
-    python -m pip install -r requirements.txt
+# 複製應用程式文件
+COPY app.py generate_TW_patients.py config_loader.py run.py ./
+COPY config/ ./config/
+COPY templates/ ./templates/
 
-# Switch to the non-privileged user to run the application.
+# 創建輸出目錄
+RUN mkdir -p /app/output/complete_patients_fixed \
+             /app/output/custom_patients \
+             /app/logs
+
+# 創建非root用戶
+RUN useradd -m -u 1000 appuser \
+    && chown -R appuser:appuser /app
+
+# 切換到非root用戶
 USER appuser
 
-# Copy the source code into the container.
-COPY . .
-
-# Expose the port that the application listens on.
+# 暴露埠號
 EXPOSE 5000
 
-# Run the application.
-CMD gunicorn 'app:app' --bind=0.0.0.0:5000
+# 健康檢查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5000/ || exit 1
+
+# 啟動應用程式
+CMD ["python", "run.py", "--host", "0.0.0.0", "--port", "5000"]
+
