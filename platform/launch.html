@@ -55,53 +55,45 @@
 
     <script src="https://cdn.jsdelivr.net/npm/fhirclient/build/fhir-client.js"></script>
     <script>
+
         console.log('SMART Launch 開始...');
-        
-        // 獲取 URL 參數
+
         const urlParams = new URLSearchParams(window.location.search);
-        const iss = urlParams.get('iss');
-        const launch = urlParams.get('launch');
-        
-        console.log('Launch 參數:', { iss, launch });
-        
-        // 檢查是否為 EHR Launch（有 iss 和 launch 參數）或 Standalone Launch
-        if (iss && launch) {
-            // EHR Launch - 從 EHR 啟動
-            console.log('EHR Launch 模式');
-            updateStatus('從 EHR 系統啟動中...', '正在驗證 EHR 授權參數');
+
+        const iss = "http://localhost:8083/fhir-server/api/v4/"; 
+        const launch = urlParams.get('launch'); 
+
+        const KEYCLOAK_AUTH_URL = "http://localhost:8080/realms/fhir/protocol/openid-connect/auth";
+        const REDIRECT_URI = "http://localhost:8085/index.html";
+        // 客戶端 ID (Client ID)
+        const CLIENT_ID = "smart_cds_platform"; 
+        // const SCOPE = "launch openid fhirUser patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read";
+        const SCOPE = "openid";
+
+
+        // 檢查是否為 Launch (只需檢查 launch 參數，因為 iss 已修正)
+        if (launch) { 
+            console.log('偵測到 Launch 參數 - 正在直接跳轉到 Keycloak 進行授權');
             
-            FHIR.oauth2.authorize({
-                clientId: "smart_cds_platform",
-                scope: "launch openid fhirUser patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read",
-                redirectUri: "./index.html",
-                iss: iss,
-                launch: launch
-            });
+            const authUrl = KEYCLOAK_AUTH_URL +
+                '?response_type=code' +
+                '&client_id=' + CLIENT_ID +
+                '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
+                '&scope=' + encodeURIComponent(SCOPE) +
+                // 關鍵點：使用硬編碼的正確 iss 值
+                '&iss=' + encodeURIComponent(iss) + 
+                '&launch=' + encodeURIComponent(launch);
+
+            console.log('Keycloak 授權 URL:', authUrl);
             
-        } else if (iss) {
-            // Standalone Launch with ISS - 獨立啟動但有指定 FHIR 服務器
-            console.log('Standalone Launch 模式 (指定服務器)');
-            updateStatus('獨立啟動模式', '連接到指定的 FHIR 服務器');
-            
-            FHIR.oauth2.authorize({
-                clientId: "smart_cds_platform",
-                scope: "openid fhirUser patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read",
-                redirectUri: "./index.html",
-                iss: iss
-            });
+            // 使用最底層的重定向
+            window.location.href = authUrl;
             
         } else {
-            // 完全獨立啟動 - 使用預設測試服務器
-            console.log('預設測試模式');
-            updateStatus('測試模式啟動', '連接到 SMART Health IT 測試服務器');
-            
-            FHIR.oauth2.authorize({
-                clientId: "smart_cds_platform",
-                scope: "openid fhirUser patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read",
-                redirectUri: "./index.html",
-                iss: "https://r4.smarthealthit.org"
-            });
+            console.log('無 Launch 參數，導向主頁並顯示錯誤');
+            window.location.replace('./index.html');
         }
+        
 
         // 更新狀態顯示
         function updateStatus(title, subtitle) {

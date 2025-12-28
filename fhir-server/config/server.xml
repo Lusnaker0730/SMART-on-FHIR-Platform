@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<server description="FHIR Server Final Configuration">
+
+    <variable name="fhir.config.dir" value="/opt/ol/wlp/usr/servers/defaultServer/config/default"/>
+
+    <featureManager>
+        <feature>jwt-1.0</feature>
+        <feature>mpJwt-1.2</feature>
+        <feature>transportSecurity-1.0</feature>
+        <feature>appSecurity-3.0</feature>
+        <feature>jaxrs-2.1</feature>
+        <feature>servlet-4.0</feature>
+        <feature>jdbc-4.1</feature>
+        <feature>json-1.0</feature>
+        <feature>websocket-1.1</feature>
+        <feature>distributedMap-1.0</feature>
+    </featureManager>
+
+    <httpEndpoint id="defaultHttpEndpoint" host="*" httpPort="9080" httpsPort="9443"/>
+    <keyStore id="defaultKeyStore" password="change-password" />
+
+    <cors domain="*"
+      allowCredentials="true"
+      allowedHttpHeaders="Content-Type,Authorization,X-FHIR-TENANT-ID"
+      allowedHttpMethods="GET,POST,PUT,DELETE,OPTIONS" />
+
+    <jwtConsumer id="fhirJwtConsumer"
+        jwksUri="http://keycloak:8080/realms/fhir/protocol/openid-connect/certs"
+        audiences="smart_cds_platform" 
+        issuer="http://localhost:8080/realms/fhir" 
+        signatureAlgorithm="RS256"
+        scopeClaim="scope" />
+
+    <webApplication id="fhir-server" 
+                    location="/opt/ol/wlp/usr/servers/defaultServer/apps/fhir-server.war" 
+                    name="fhir-server">
+        <application-bnd>
+            <security-role name="FHIRUsers">
+                <special-subject type="ALL_AUTHENTICATED_USERS" />
+            </security-role>
+        </application-bnd>
+        <classloader commonLibraryRef="fhirLibrary" />
+    </webApplication>
+
+    <library id="fhirLibrary">
+        <folder dir="/opt/ol/wlp/usr/servers/defaultServer/config/default" />
+        <folder dir="/opt/ol/wlp/usr/servers/defaultServer/userlib" />
+    </library>
+
+    <include location="/opt/ol/wlp/usr/servers/defaultServer/configDropins/defaults/open-default-port.xml"/>
+
+</server>

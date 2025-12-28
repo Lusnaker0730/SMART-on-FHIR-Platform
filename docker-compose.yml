@@ -1,29 +1,68 @@
 services:
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0.6
-    container_name: keycloak
-    ports:
-      - "8082:8080"
-    # depends_on:
-    #   - postgres
+  db:
+    image: postgres:14-alpine
+    container_name: postgres_db
     environment:
-      # KC_DB: postgres
-      # KC_DB_URL_HOST: postgres
-      # KC_DB_URL_DATABASE: keycloak
-      # KC_DB_USERNAME: keycloak
-      # KC_DB_PASSWORD: keycloak123
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: kcuser
+      POSTGRES_PASSWORD: kcpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fhirnet
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:18.0.0
+    container_name: keycloak
+    command: start-dev --import-realm --db=postgres
+    depends_on:
+      db:
+        condition: service_started
+    environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-    command:
-      - start-dev
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db/keycloak
+      KC_DB_USERNAME: kcuser
+      KC_DB_PASSWORD: kcpassword
+      KC_HTTP_PORT: 8080
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_CONTENT_SECURITY_POLICY: "frame-ancestors 'self' http://localhost:9009 http://localhost:8085 http://127.0.0.1:8085;"
+    volumes:
+      - ./keycloak-data/fhir-realm.json:/opt/keycloak/data/import/fhir-realm.json
+    ports:
+      - "8080:8080"
     networks:
-      - fhir-net
-    restart: always
-    # healthcheck:
-    #   test: ["CMD-SHELL", "curl -f http://localhost:8080/realms/master || exit 1"]
-    #   interval: 10s
-    #   retries: 5
-    #   timeout: 5s
+      - fhirnet
+
+  fhir-server:
+    image: ibmcom/ibm-fhir-server:latest
+    container_name: fhir-server
+    depends_on:
+      keycloak:
+        condition: service_started
+    # volumes:
+    #   # 關鍵：掛載 IBM 專用的 server.xml
+    #   - ./fhir-server/config/server.xml:/opt/ol/wlp/usr/servers/defaultServer/server.xml
+    #   - ./fhir-server/config/default:/opt/ol/wlp/usr/servers/defaultServer/config/default
+    #   - fhir_data:/opt/ol/wlp/usr/servers/defaultServer/derby
+    #   - ./fhir-server/config:/opt/ol/wlp/usr/servers/defaultServer/config
+    volumes:
+      # 使用絕對路徑確保掛載成功（請根據你的實際位置調整）
+      - D:/Project/CGU/fhir-smart-docker/fhir-server/config:/opt/ol/wlp/usr/servers/defaultServer/config
+      - D:/Project/CGU/fhir-smart-docker/fhir-server/config/server.xml:/opt/ol/wlp/usr/servers/defaultServer/server.xml
+      - fhir_data:/opt/ol/wlp/usr/servers/defaultServer/derby
+    ports:
+      - "8083:9080"  # HTTP
+      - "8443:9443"  # HTTPS
+    environment:
+      - BOOTSTRAP_DB=true
+      - FHIR_IGNORE_TRANS_SECURITY=true
+      - FHIR_CONFIG_DIR=/opt/ol/wlp/usr/servers/defaultServer/config
+    networks:
+      - fhirnet
+    restart: unless-stopped
 
   smart-launcher:
     image: smartonfhir/smart-launcher:latest
@@ -32,79 +71,29 @@ services:
       - "9009:80"
     environment:
       BASE_URL: http://localhost:9009
-      FHIR_SERVER_R4: http://localhost:8080/fhir # FHIR Server Change
-      PICKER_CONFIG_R4: r4
-      PICKER_ORIGIN: http://localhost:9009
+      FHIR_SERVER_R4: http://localhost:8083/fhir-server/api/v4
+      PICKER_CONFIG_R4_FHIR_URL: http://localhost:8083/fhir-server/api/v4
+      PICKER_CONFIG_R4_IFRAME_LAUNCH: "false"
+      AUTH_SERVER_R4: http://localhost:8080/realms/fhir/protocol/openid-connect/auth
+      TOKEN_SERVER_R4: http://keycloak:8080/realms/fhir/protocol/openid-connect/token
     networks:
-      - fhir-net
-
-  hapi-fhir:
-    build: ./fhir-server
-    container_name: hapi-fhir-oauth
-    depends_on:
-      # postgres:
-      #   condition: service_healthy
-      keycloak:
-        condition: service_started
-    ports:
-      - "8080:8080"  # FHIR Server Change
-    volumes:
-      - ./fhir-server/hapi.properties:/opt/hapi-fhir/hapi.properties
-    environment:
-      # OAuth2 / Keycloak
-      HAPI_OAUTH_ENABLED: "true"
-      HAPI_OAUTH_ISSUER: "http://keycloak:8082/realms/fhir"
-      HAPI_OAUTH_TOKEN_ENDPOINT: "http://keycloak:8082/realms/fhir/protocol/openid-connect/token"
-      HAPI_OAUTH_AUTHORIZATION_ENDPOINT: "http://keycloak:8082/realms/fhir/protocol/openid-connect/auth"
-      # PostgreSQL 連線設定
-      # HAPI_FHIR_DATABASE_TYPE: postgresql
-      # HAPI_FHIR_SQL_SCHEMA_UPDATE: true
-      # HAPI_FHIR_AUTO_CREATE_SCHEMA: true
-      # HAPI_FHIR_AUTO_CREATE_DATABASE: true
-      # HAPI_FHIR_DB_DRIVER: org.postgresql.Driver
-      # HAPI_FHIR_DB_URL: jdbc:postgresql://postgres:5432/hapi
-      # HAPI_FHIR_DB_USER: fhir
-      # HAPI_FHIR_DB_PASSWORD: fhir123
-    networks:
-      - fhir-net
-    # healthcheck:
-    #   test: ["CMD-SHELL", "curl -f http://localhost:8080/fhir/metadata || exit 1"] 
-    #   interval: 10s
-    #   retries: 10
-    #   timeout: 5s
-
-    
-
-  # postgres:
-  #   image: postgres:15
-  #   container_name: postgres
-  #   restart: always
-  #   environment:
-  #     POSTGRES_DB: "hapi"
-  #     POSTGRES_USER: "admin"
-  #     POSTGRES_PASSWORD: "admin"
-  #   volumes:
-  #     - postgres:/var/lib/postgresql/data   # 確保資料持久化
-  #     - ./init-db:/docker-entrypoint-initdb.d  # 初始化 fhir user
-  #   networks:
-  #     - fhir-net
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U keycloak"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 10
+      - fhirnet
 
   platform:
     build: ./platform
-    container_name: smart-platform
+    container_name: platform
     ports:
       - "8085:8085"
     networks:
-      - fhir-net
+      - fhirnet
 
-# volumes:
-#   postgres:
+volumes:
+  postgres_data:
+    name: postgres_data
+  fhir_data:
+    name: fhir_data
 
 networks:
-  fhir-net:
+  fhirnet:
     driver: bridge
+    name: fhirnet

@@ -5,8 +5,8 @@ let encounterData = null;
 let userData = null;
 let currentHook = null;
 let hookInterval = null;
-const FHIR_BASE = "http://localhost:8080/fhir";
-const examplePatientId = "1";
+const FHIR_BASE = "http://localhost:8083/fhir-server/api/v4";
+const examplePatientId = "example-patient-tw";
 
 /* CDS Hooks 定義*/
 const cdsHooks = {
@@ -108,7 +108,7 @@ async function initializeMockSmartClient(patientId = examplePatientId) {
 
     return new Promise((resolve) => {
         const mockClient = {
-            serverUrl: "http://localhost:8080/fhir",
+            serverUrl: FHIR_BASE,
             patient: { id: patientId },
             user: { id: "developer-user" },
             encounter: { id: "mock-encounter" },

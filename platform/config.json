@@ -44,11 +44,8 @@
       "fhirServiceUrl": "http://localhost:8080/fhir",
       "scope": "patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read",
       "clientId": "smart_cds_platform",
-      "requiresAuth": false,
-      "patientIds": [
-        "patient-1",
-        "patient-2"
-      ]
+      "requiresAuth": true,
+      "patientIds": []
     },
     "cerner-sandbox": {
       "name": "Cerner Sandbox",
