@@ -11,6 +11,12 @@ services:
     networks:
       - fhirnet
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U kcuser -d keycloak" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   keycloak:
     image: quay.io/keycloak/keycloak:18.0.0
@@ -18,7 +24,7 @@ services:
     command: start-dev --import-realm --db=postgres
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -42,20 +48,14 @@ services:
     depends_on:
       keycloak:
         condition: service_started
-    # volumes:
-    #   # 關鍵：掛載 IBM 專用的 server.xml
-    #   - ./fhir-server/config/server.xml:/opt/ol/wlp/usr/servers/defaultServer/server.xml
-    #   - ./fhir-server/config/default:/opt/ol/wlp/usr/servers/defaultServer/config/default
-    #   - fhir_data:/opt/ol/wlp/usr/servers/defaultServer/derby
-    #   - ./fhir-server/config:/opt/ol/wlp/usr/servers/defaultServer/config
     volumes:
-      # 使用絕對路徑確保掛載成功（請根據你的實際位置調整）
-      - D:/Project/CGU/fhir-smart-docker/fhir-server/config:/opt/ol/wlp/usr/servers/defaultServer/config
-      - D:/Project/CGU/fhir-smart-docker/fhir-server/config/server.xml:/opt/ol/wlp/usr/servers/defaultServer/server.xml
+      # 使用相對路徑，確保從專案目錄載入配置
+      - ./fhir-server/config:/opt/ol/wlp/usr/servers/defaultServer/config
+      - ./fhir-server/config/server.xml:/opt/ol/wlp/usr/servers/defaultServer/server.xml
       - fhir_data:/opt/ol/wlp/usr/servers/defaultServer/derby
     ports:
-      - "8083:9080"  # HTTP
-      - "8443:9443"  # HTTPS
+      - "8083:9080" # HTTP
+      - "8443:9443" # HTTPS
     environment:
       - BOOTSTRAP_DB=true
       - FHIR_IGNORE_TRANS_SECURITY=true
@@ -70,12 +70,18 @@ services:
     ports:
       - "9009:80"
     environment:
+      # 對外 URL (瀏覽器訪問用)
       BASE_URL: http://localhost:9009
-      FHIR_SERVER_R4: http://localhost:8083/fhir-server/api/v4
-      PICKER_CONFIG_R4_FHIR_URL: http://localhost:8083/fhir-server/api/v4
+      # 對內 URL (容器間通訊用) - 使用 Docker 網路服務名稱
+      # 注意: IBM FHIR Server 的路徑是 /fhir-server/ (不是 /fhir-server/api/v4/)
+      FHIR_SERVER_R4: http://fhir-server:9080/fhir-server
+      # 對外 URL (瀏覽器用來顯示病人選擇器)
+      PICKER_CONFIG_R4_FHIR_URL: http://localhost:8083/fhir-server
       PICKER_CONFIG_R4_IFRAME_LAUNCH: "false"
+      # Keycloak URL - 對外給瀏覽器使用
       AUTH_SERVER_R4: http://localhost:8080/realms/fhir/protocol/openid-connect/auth
-      TOKEN_SERVER_R4: http://keycloak:8080/realms/fhir/protocol/openid-connect/token
+      # Keycloak URL - 對內給 token 交換使用
+      TOKEN_SERVER_R4: http://localhost:8080/realms/fhir/protocol/openid-connect/token
     networks:
       - fhirnet
 
@@ -83,7 +89,7 @@ services:
     build: ./platform
     container_name: platform
     ports:
-      - "8085:8085"
+      - "8085:80"
     networks:
       - fhirnet
 

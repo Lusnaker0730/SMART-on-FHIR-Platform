@@ -1,24 +1,26 @@
-# 使用 Nginx 作為基礎映像檔
-FROM nginx:alpine
+# Stage 1: Build stage (optional, for future if needed)
+FROM nginx:alpine AS production
 
-# 1. 複製你的前端檔案到 Nginx 預設網頁目錄
-COPY index.html /usr/share/nginx/html/
-COPY script.js /usr/share/nginx/html/
-# 如果有 CSS 檔案也請加入
-# COPY styles.css /usr/share/nginx/html/
+# Set working directory
+WORKDIR /usr/share/nginx/html
 
-# 2. 建立 Nginx 設定，讓它在容器內監聽 8085 (與 docker-compose 對齊)
-RUN echo 'server { \
-    listen 8085; \
-    location / { \
-        root /usr/share/nginx/html; \
-        index index.html; \
-        try_files $uri $uri/ /index.html; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# Remove default nginx static assets
+RUN rm -rf ./*
 
-# 3. 開放 8085 埠
-EXPOSE 8085
+# Copy application files
+COPY . .
 
-# 4. 啟動 Nginx
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
+
+

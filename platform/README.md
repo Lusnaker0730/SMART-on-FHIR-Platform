@@ -1,345 +1,358 @@
-# 🏥 SMART 平台 - 病患資訊管理系統
+# 🏥 CGMH EHRCALC on FHIR
 
-## 概述
+A comprehensive SMART on FHIR application providing **92 clinical calculators** for healthcare professionals, inspired by MDCalc. This application integrates seamlessly with Electronic Health Records (EHR) to provide automated patient data population and clinical decision support.
 
-這是一個基於 SMART on FHIR 標準的醫療資訊平台，提供完整的病患資訊管理、CDS Hook 決策支持和 SMART 應用程式整合功能。**現在支援真實的 SMART on FHIR 整合**，可以從實際的 FHIR 服務器載入病人上下文和臨床資料。
+## ✨ Features
 
-## 🚀 新功能：真實的 SMART on FHIR 整合
+### 🧮 **92 Clinical Calculators**
+- **Cardiovascular Risk Assessment**: ASCVD, Framingham, GRACE ACS, etc.
+- **Renal Function**: CKD-EPI, MDRD, Cockcroft-Gault, etc.
+- **Critical Care Scoring**: APACHE II, SOFA, qSOFA, etc.
+- **Drug Conversion**: Benzodiazepine, Steroid, MME calculators
+- **Pediatric Tools**: Growth Charts, APGAR, PECARN, etc.
+- **Infection Assessment**: CURB-65, SIRS, Bacterial Meningitis Score, etc.
 
-### 🔗 SMART on FHIR 支援
-- ✅ **EHR Launch 流程**：支援從 EHR 系統啟動
-- ✅ **Standalone Launch 流程**：支援獨立啟動
-- ✅ **OAuth 2.0 授權**：完整的 SMART on FHIR 授權流程
-- ✅ **病人上下文載入**：自動載入選定的病人資訊
-- ✅ **真實 FHIR 資料**：從真實 FHIR 服務器載入資料
+### 🔗 **SMART on FHIR Integration**
+- Automatic patient data population from EHR
+- Real-time lab value retrieval
+- Seamless integration with clinical workflows
 
-### 🔧 支援的 FHIR 服務器
-- **SMART Health IT R4/R3**：官方測試環境
-- **HAPI FHIR**：公開測試服務器
-- **Cerner Sandbox**：Cerner 開發者環境
-- **Epic Sandbox**：Epic 開發者環境
-- **本地 HAPI 服務器**：本地開發環境
+### 🎨 **Modern User Interface**
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Sticky Header**: Patient info and search always visible
+- **Advanced Search & Sort**: Find calculators quickly with A-Z, Z-A sorting
+- **Beautiful UI**: Modern gradient design with smooth animations
 
-### 📊 FHIR 資源支援
-- **Patient**：病人基本資訊
-- **Condition**：診斷資訊
-- **Observation**：檢測數據
-- **MedicationRequest**：藥物處方
-- **Encounter**：就診記錄
-- **Practitioner**：醫護人員資訊
+### 📊 **Enhanced Calculator Features**
+- **Formula Display**: Mathematical formulas with detailed explanations
+- **Reference Materials**: Citations and clinical images
+- **Normal Value Ranges**: Built-in reference ranges
+- **Clinical Notes**: Important usage guidelines
 
-## 主要功能
+## 🚀 How to Run
 
-### 📋 左側面板 - 病患基本資料
-- **病患資訊卡片**: 顯示病患基本資訊，包括姓名、年齡、性別、病歷號等
-- **最近診斷**: 列出病患的最新診斷記錄，包括診斷日期和醫師資訊
-- **診斷狀態**: 即時顯示診斷的活躍狀態
+### Method 1: Docker (推薦 / Recommended) 🐳
 
-### 💚 中間面板 - CDS Hook 展示區域
-- **ASCVD 風險評估**: 心血管疾病風險計算器
-- **風險因子分析**: 自動分析病患的風險因素
-- **CDS 建議**: 基於證據的臨床決策支援建議
-- **互動式計算器**: 完整的風險評估工具
+**最簡單的方式 - 一鍵啟動！**
 
-### ⚙️ 右側面板 - 功能選單
-- **CDS Hook 功能**:
-  - ARC-HBR 風險權衡分析
-  - ASCVD 風險評估
-  - 實驗室數據趨勢分析
-  - 風險評估檢測
-  - 臨床報告生成
-  - 系統設定
-
-- **SMART on FHIR 應用程式**:
-  - ASCVD Risk Calculator
-  - Drug Interaction Checker
-  - Lab Results Viewer
-  - Prescribing Assistant
-
-## 技術特色
-
-### 🎨 現代化 UI 設計
-- **響應式設計**: 適配不同螢幕尺寸
-- **直觀的用戶界面**: 醫療專業人員友好的設計
-- **流暢的動畫效果**: 增強用戶體驗
-- **專業的顏色搭配**: 符合醫療環境的視覺風格
-
-### 🔧 互動功能
-- **即時通知系統**: 操作反饋和狀態提示
-- **模態視窗**: 詳細的功能操作界面
-- **動態內容更新**: 根據選擇的功能切換內容
-- **實時時間顯示**: 系統狀態指示器
-
-### 📱 響應式設計
-- **桌面版**: 三欄式布局，最佳化大螢幕體驗
-- **平板版**: 適配中等螢幕尺寸
-- **手機版**: 單欄式布局，觸控友好
-
-## 使用方法
-
-### 🚀 快速開始
-
-#### 方法 1: 使用 npm 啟動（推薦）
 ```bash
-# 1. 安裝依賴
-npm install
+# Windows
+.\start-docker.ps1
 
-# 2. 啟動開發服務器
-npm run dev
-```
-服務器將自動在 `http://localhost:8080` 啟動並開啟瀏覽器
+# Linux/Mac
+chmod +x start-docker.sh
+./start-docker.sh
 
-#### 方法 2: 使用 Python HTTP 服務器
-```bash
-python -m http.server 8000
+# 或使用 Docker Compose
+docker-compose up -d
 ```
 
-### 📋 透過 EHR Launch 啟動的詳細步驟
+訪問：**http://localhost:8080**
 
-#### ✅ 步驟 1: EHR Launch 測試（推薦新手）
-1. **啟動本地服務器**：
+#### 🔄 更新 Docker 容器（包含最新檔案）
+
+如果您遇到 404 錯誤或需要更新容器：
+
+```powershell
+# Windows - 自動重建並啟動
+.\rebuild-docker.ps1
+
+# 或手動執行
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+#### 🏥 透過 SMART on FHIR 啟動
+
+1. **確保容器正在運行**
    ```bash
-   npm run dev
-   # 或 python -m http.server 8080
+   docker ps  # 應看到 medcalcehr-app
    ```
 
-2. **開啟 SMART Health IT Launcher**：
-   - 訪問：[https://launch.smarthealthit.org/](https://launch.smarthealthit.org/)
-   
-3. **配置啟動參數**：
-   - **App Launch URL**：`http://localhost:8080/launch.html`
-   - **FHIR Version**：選擇 `R4 (4.0.x)`
-   - **Simulate EHR Launch**：保持勾選
-   
-4. **選擇測試環境**：
-   - **Provider**：選擇任一醫師
-   - **Patient**：選擇測試病患（如：Alayna Kassulke）
-   - **Encounter**：選擇就診紀錄（可選）
+2. **訪問健康檢查頁面**
+   - http://localhost:8080/health-check.html
 
-5. **啟動應用**：
-   - 點擊綠色的 **"Launch App"** 按鈕
-   - 系統會自動重定向到您的應用並載入選定病患的資料
+3. **使用 SMART Health IT Launcher 測試**
+   - 前往：https://launch.smarthealthit.org/
+   - App Launch URL: `http://localhost:8080/launch.html`
+   - 或使用您的 IP: `http://YOUR_IP:8080/launch.html`
+   - FHIR Version: **R4 (FHIR 4.0.1)**
+   - 選擇測試病患並點擊 **"Launch App!"**
 
-#### ✅ 步驟 2: 直接 Standalone Launch
-如果您想跳過 launcher 直接測試：
-```bash
-# 直接在瀏覽器開啟：
-http://localhost:8080/launch.html?iss=https://r4.smarthealthit.org
+4. **詳細設定指南**
+   - 參考：[SMART_LAUNCH_GUIDE.md](SMART_LAUNCH_GUIDE.md)
+
+#### 🔍 檢查清單
+
+- ✅ Docker 容器運行中：`docker ps`
+- ✅ 可訪問首頁：http://localhost:8080
+- ✅ 可訪問啟動頁：http://localhost:8080/launch.html
+- ✅ 健康檢查通過：http://localhost:8080/health-check.html
+- ✅ 計算器測試通過：http://localhost:8080/test-calculators.html
+
+#### 🧪 測試所有計算器
+
+自動化測試工具可以驗證所有 91 個計算器模組：
+
+```
+http://localhost:8080/test-calculators.html
 ```
 
-#### ✅ 步驟 3: 使用特定病患 ID 測試
-```bash
-# 指定特定病患的測試：
-http://localhost:8080/launch.html?iss=https://r4.smarthealthit.org&launch=WzAsImIzODYzNzFhLTkzN2QtNGUxMi04ODI3LWY4OGY4ZTc5MzE5YSIsIkFsbCJd
-```
+**功能**：
+- ✅ 自動測試所有計算器載入
+- ✅ 驗證模組結構和必要方法
+- ✅ 即時顯示測試進度和結果
+- ✅ 可篩選成功/失敗項目
+- ✅ 可匯出 JSON 格式報告
+- ✅ 單個計算器重新測試
 
-### 🔍 Launch 流程說明
+詳細說明：[計算器測試指南](CALCULATOR_TESTING_GUIDE.md)
 
-當您透過 EHR Launch 啟動應用時，會發生以下流程：
+#### 🎨 統一樣式系統
 
-1. **EHR 系統調用**：EHR 調用您的 `launch.html` 並傳遞參數：
-   - `iss`: FHIR 服務器的 URL
-   - `launch`: EHR 系統生成的啟動權杖
+所有計算器現在使用統一的樣式系統，確保一致的使用者體驗：
 
-2. **授權請求**：`launch.html` 自動重定向到 FHIR 服務器進行 OAuth 授權
+**新功能**：
+- ✅ 預定義的 UI 組件庫（輸入、按鈕、結果顯示）
+- ✅ 統一的顏色方案和風險指標
+- ✅ 響應式設計（手機、平板、桌面）
+- ✅ 無障礙支援
+- ✅ 列印友好樣式
 
-3. **用戶同意**：用戶同意應用存取權限（在測試環境中通常自動通過）
+**開發指南**：
+- 快速參考：[UNIFIED_STYLE_QUICK_REF.md](UNIFIED_STYLE_QUICK_REF.md)
+- 完整指南：[CALCULATOR_STYLE_GUIDE.md](CALCULATOR_STYLE_GUIDE.md)
+- CSS 檔案：`css/unified-calculator.css`
 
-4. **重定向回應**：授權完成後重定向到 `index.html` 並帶上授權碼
+**範例組件**：
 
-5. **載入應用**：`index.html` 使用授權碼獲取存取令牌並載入病患資料
+<details>
+<summary>點擊查看基本範本</summary>
 
-### 🛠️ 故障排除
-
-#### 問題 1: "Launch 失敗" 錯誤
-**解決方案**：
-- 確認服務器正在運行
-- 檢查瀏覽器控制台的錯誤訊息
-- 確認啟動 URL 正確：`http://localhost:8080/launch.html`
-
-#### 問題 2: 無法載入病患資料
-**解決方案**：
-- 檢查網路連線
-- 確認 FHIR 服務器狀態：https://r4.smarthealthit.org/metadata
-- 檢查瀏覽器是否阻擋了跨源請求
-
-#### 問題 3: HTTPS 相關錯誤  
-**解決方案**：
-- 本地開發使用 HTTP 即可
-- 生產環境必須使用 HTTPS
-
-### 🔧 配置不同的 FHIR 服務器
-
-修改 `config.json` 文件來配置不同的 FHIR 服務器：
-
-```json
-{
-  "servers": {
-    "your-server": {
-      "name": "Your FHIR Server",
-      "fhirServiceUrl": "https://your-fhir-server.com/fhir",
-      "clientId": "your-client-id",
-      "scope": "launch openid fhirUser patient/*.read",
-      "requiresAuth": true
+```javascript
+export const exampleCalculator = {
+    generateHTML: function() {
+        return `
+            <!-- 標題 -->
+            <div class="calculator-header">
+                <h3>${this.title}</h3>
+                <p class="description">計算器說明</p>
+            </div>
+            
+            <!-- 輸入 -->
+            <div class="input-group">
+                <label for="age">Age:</label>
+                <input type="number" id="age">
+            </div>
+            
+            <!-- 按鈕 -->
+            <button class="btn-calculate">Calculate</button>
+            
+            <!-- 結果 -->
+            <div class="result-container" style="display: none;">
+                <div class="result-score">
+                    <span class="result-score-value">24.5</span>
+                    <span class="result-score-unit">kg/m²</span>
+                </div>
+                <div class="risk-badge low">Low Risk</div>
+            </div>
+        `;
     }
-  }
-}
+};
 ```
+</details>
 
-### 📋 基本操作
-1. **查看病患資訊**: 左側面板顯示從 FHIR 服務器載入的真實病患資料
-2. **選擇 CDS 功能**: 點擊右側功能選單中的任一功能按鈕
-3. **執行風險評估**: 使用中間面板的計算器工具
-4. **開啟 SMART 應用**: 點擊快速動作區域的應用程式按鈕
+📖 詳細說明請參考 [Docker 部署指南](README_DOCKER.md)
 
-### 🔍 進階功能
-- **診斷詳情**: 點擊左側診斷項目查看完整的 FHIR 資源資訊
-- **風險計算**: 使用 ASCVD 計算器進行詳細風險評估
-- **功能切換**: 通過右側選單切換不同的 CDS Hook 功能
-- **相關資料**: 從診斷詳情頁面載入相關的檢測數據和藥物資訊
-
-### 🛠️ 開發者功能
-- **FHIR 資源檢視**: 在診斷詳情中查看完整的 FHIR JSON
-- **調試模式**: 開啟瀏覽器開發工具查看 FHIR 請求和響應
-- **多服務器支援**: 在配置文件中添加多個 FHIR 服務器
-
-## 檔案結構
-
-```
-CDSplayground/
-├── index.html          # 主要應用程式頁面
-├── launch.html         # SMART on FHIR 啟動頁面
-├── styles.css          # 樣式表
-├── script.js           # JavaScript 功能腳本
-├── config.json         # FHIR 服務器配置文件
-└── README.md          # 說明文件
-```
-
-## 依賴項目
-
-### 外部資源
-- **FHIR Client JS**: SMART on FHIR JavaScript 客戶端庫
-  - CDN: `https://cdn.jsdelivr.net/npm/fhirclient/build/fhir-client.js`
-  - 版本: 最新穩定版
-- **Font Awesome 6.0.0**: 圖示庫
-- **Google Fonts**: 字型支援（可選）
-
-### 技術棧
-- **HTML5**: 結構標記
-- **CSS3**: 樣式和動畫
-- **Vanilla JavaScript**: 功能實現
-- **SMART on FHIR**: 醫療資訊交換標準
-- **OAuth 2.0**: 授權協議
-- **Grid & Flexbox**: 響應式布局
-
-## 功能詳細說明
-
-### ASCVD 風險評估
-- 基於 ACC/AHA 2013 指南
-- 支援 10 年心血管疾病風險計算
-- 自動帶入病患資料
-- 提供詳細的風險因子分析
-
-### CDS Hook 系統
-- 模擬真實的 CDS Hook 工作流程
-- 支援多種臨床決策支援工具
-- 即時建議和警告系統
-- 與 FHIR 標準相容
-
-### SMART on FHIR 整合
-- 支援外部 SMART 應用程式
-- 模擬應用程式啟動流程
-- 標準化的 API 介面
-- 安全的資料存取
-
-## 自定義和擴展
-
-### 添加新的 CDS Hook
-1. 在 `script.js` 中添加新的功能函數
-2. 在 `updateCenterPanel()` 函數中添加對應的 case
-3. 在 `index.html` 中添加功能按鈕
-
-### 自定義樣式
-- 修改 `styles.css` 中的 CSS 變數
-- 調整顏色方案和字型
-- 添加自定義動畫效果
-
-### 整合真實 FHIR 資料
-- 修改 `loadPatientData()` 函數
-- 添加 FHIR 客戶端庫
-- 實現真實的資料來源連接
-
-## 瀏覽器支援
-
-- ✅ Chrome 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
-- ✅ Edge 90+
-
-## 部署說明
-
-### 本地開發
-1. **複製檔案**到本地目錄
-2. **啟動 HTTP 服務器**（必需，不能直接開啟檔案）：
+### Method 2: Python HTTP Server
+1. Navigate to the project directory
+2. Start a local web server:
    ```bash
    # Python 3
    python -m http.server 8000
    
    # Python 2
    python -m SimpleHTTPServer 8000
-   
-   # Node.js
-   npx http-server -p 8000
    ```
-3. **測試 SMART 啟動**：
-   - EHR Launch: 使用 [SMART Health IT Launcher](http://launch.smarthealthit.org/)
-   - Standalone Launch: 直接訪問 `http://localhost:8000/launch.html?iss=https://r4.smarthealthit.org`
 
-### 生產環境
-1. **部署到 Web 服務器**
-2. **配置 HTTPS**（SMART on FHIR 要求）
-3. **註冊 SMART 應用程式**：
-   - 在目標 EHR 系統註冊應用程式
-   - 獲取 `client_id`
-   - 配置重定向 URI：`https://your-domain.com/index.html`
-   - 更新 `launch.html` 中的 `clientId`
-4. **設定適當的安全標頭**
-5. **配置 CORS**（如果需要）
+### Method 3: Node.js HTTP Server
+```bash
+npx http-server -p 8000
+```
 
-### Cerner 沙盒配置
-1. 在 [Cerner Developer Console](https://code.cerner.com/) 註冊應用程式
-2. 設定重定向 URI：`http://localhost:8000/index.html`
-3. 更新 `config.json` 中的 Cerner 配置
-4. 在 `launch.html` 中使用 Cerner 的 `clientId`
+### Method 4: Live Server (VS Code Extension)
+1. Install the "Live Server" extension in VS Code
+2. Right-click on `launch.html` and select "Open with Live Server"
 
-### Epic 沙盒配置
-1. 在 [Epic Developer Console](https://fhir.epic.com/) 註冊應用程式
-2. 設定重定向 URI：`http://localhost:8000/index.html`
-3. 更新 `config.json` 中的 Epic 配置
-4. 注意：Epic 的重定向 URI 變更需要 24 小時生效
+## 🔧 SMART on FHIR Setup
 
-## 安全考慮
+1. **Start your local server** (using any method above)
+2. **Go to SMART Health IT Launcher**: [https://launch.smarthealthit.org/](https://launch.smarthealthit.org/)
+3. **Configure the launcher**:
+   - **App Launch URL**: `http://localhost:8000/launch.html`
+   - **Select a patient** from the available test patients
+4. **Launch the application**
 
-- 使用 HTTPS 進行資料傳輸
-- 實施適當的身份驗證
-- 確保 FHIR 資料的安全存取
-- 定期更新依賴項目
+## 📱 Usage
 
-## 貢獻指南
+### 🔍 **Finding Calculators**
+- Use the **search bar** to find specific calculators
+- **Sort options**: A→Z, Z→A, Recently Added, Most Used
+- **Browse by category**: All calculators are alphabetically organized
 
-1. Fork 專案
-2. 創建功能分支
-3. 提交變更
-4. 發起 Pull Request
+### 📋 **Using Calculators**
+- Patient data is **automatically populated** from the EHR
+- **Manual input** available for all fields
+- **Real-time calculations** with immediate results
+- **Formula explanations** and clinical guidance provided
 
-## 許可證
+### 📊 **Special Features**
+- **Growth Charts**: Side-by-side height/weight visualization
+- **Reference Images**: Clinical scoring tables and diagrams
+- **Formula Sections**: Mathematical explanations with normal values
 
-MIT License - 詳見 LICENSE 文件
+## 🛠️ Technical Stack
 
-## 聯絡資訊
+- **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3
+- **FHIR Client**: SMART on FHIR JavaScript client
+- **Charts**: Chart.js for pediatric growth charts
+- **Design**: Modern CSS with gradients and animations
+- **Architecture**: Modular calculator system
 
-如有問題或建議，請聯絡開發團隊。
+## 📁 Project Structure
 
----
+```
+MEDCALCEHR/
+├── index.html              # Main calculator list
+├── calculator.html          # Individual calculator page
+├── launch.html             # SMART on FHIR launch page
+├── style.css               # Main stylesheet
+├── js/
+│   ├── main.js             # Main application logic
+│   ├── calculator-page.js  # Calculator page logic
+│   ├── utils.js            # FHIR utilities
+│   └── calculators/        # Calculator modules
+│       ├── index.js        # Calculator registry
+│       ├── apache-ii/      # APACHE II calculator
+│       ├── growth-chart/   # Pediatric growth charts
+│       ├── bwps/          # BWPS calculator
+│       └── ...            # 89 other calculators
+└── README.md
+```
 
-© 2024 SMART 平台開發團隊 
+## 🔄 Recent Updates
+
+- ✅ **Fixed Charlson Calculator**: Resolved `codes.join is not a function` error
+- ✅ **Enhanced Growth Charts**: Side-by-side height/weight display with optimized space usage
+- ✅ **Sticky Header**: Patient info and search remain visible while scrolling
+- ✅ **Advanced Sorting**: Multiple sort options for calculator list
+- ✅ **Formula Displays**: Added mathematical formulas with explanations
+- ✅ **Reference Materials**: Integrated clinical images and citations
+
+## 🏥 Clinical Calculators Included
+
+<details>
+<summary>View all 92 calculators</summary>
+
+- 2HELPS2B Score for Seizure Risk
+- 4 A's Test for Delirium
+- 4C Mortality Score for COVID-19
+- 4-Level Pulmonary Embolism Clinical Probability Score (4PEPS)
+- 4Ts Score for Heparin-Induced Thrombocytopenia (HIT)
+- 6-Minute Walk Distance (6MWD) Calculator
+- ABG Analyzer
+- ABL90 FLEX Analyzer Calculator
+- ACTION-ICU Risk Score for Intensive Care in NSTEMI
+- APACHE II Score
+- APGAR Score
+- ARISCAT Score for Postoperative Pulmonary Complications
+- ASCVD Risk Score (10-Year)
+- Atrial Fibrillation (AF) Risk Score (AHEAD)
+- Bacterial Meningitis Score for Children
+- Benzodiazepine Conversion Calculator
+- BMI and BSA Calculator
+- BWPS for Thyrotoxicosis
+- Caprini Score for VTE Risk
+- Centor Score for Strep Pharyngitis
+- Charlson Comorbidity Index (CCI)
+- Child-Pugh Score for Cirrhosis Mortality
+- CIWA-Ar for Alcohol Withdrawal
+- CKD-EPI GFR (2021)
+- Clinical Pulmonary Infection Score (CPIS) for VAP
+- Cockcroft-Gault Creatinine Clearance
+- Corrected Calcium for Hypoalbuminemia
+- Corrected Phenytoin for Hypoalbuminemia
+- Corrected QT Interval (QTc)
+- Corrected Sodium for Hyperglycemia
+- Corticosteroid Conversion Calculator
+- CURB-65 Score for Pneumonia Severity
+- Duke Activity Status Index (DASI)
+- Due Date Calculator
+- Ethanol Concentration Conversion
+- ETT Depth and Tidal Volume Calculator
+- FIB-4 Score for Liver Fibrosis
+- Fractional Excretion of Sodium (FENa)
+- Framingham Risk Score for Coronary Heart Disease
+- Free Water Deficit in Hypernatremia
+- Friedewald Equation for LDL Cholesterol
+- GAD-7 for Anxiety
+- GARFIELD-AF Risk Score
+- Geneva Score (Revised) for Pulmonary Embolism
+- Glasgow Coma Scale (GCS)
+- GRACE ACS Risk Score
+- Gupta Perioperative Cardiac Risk (MICA)
+- GWTG-HF Risk Score
+- HAS-BLED Score for Major Bleeding Risk
+- HEART Score for Major Cardiac Events
+- HOMA-IR for Insulin Resistance
+- HScore for Hemophagocytic Lymphohistiocytosis (HLH)
+- Ideal Body Weight (IBW) Calculator
+- Intraoperative Fluid Dosing Calculator
+- ISTH Criteria for DIC
+- Kawasaki Disease Diagnostic Criteria
+- MAGGIC Risk Calculator for Heart Failure
+- Maintenance Fluids Calculator
+- Mean Arterial Pressure (MAP)
+- MDRD GFR Equation
+- MELD-Na Score for Liver Disease Severity
+- Morphine Milligram Equivalent (MME) Calculator
+- NAFLD Fibrosis Score
+- NIH Stroke Scale (NIHSS)
+- Padua Prediction Score for VTE Risk
+- PECARN Head Trauma Rule for Children
+- Pediatric Growth Chart
+- PERC Rule for Pulmonary Embolism
+- PHQ-9 for Depression
+- QRISK3-Based CVD Risk (UK)
+- qSOFA Score for Sepsis
+- Ranson Criteria for Pancreatitis Mortality
+- RegiSCAR Score for DRESS
+- Revised Cardiac Risk Index (RCRI)
+- SCORE2-Diabetes for 10-Year CVD Risk
+- Serum Anion Gap
+- Serum Osmolality
+- SEX-SHOCK Risk Score for Cardiogenic Shock
+- SIRS Criteria for Systemic Inflammatory Response
+- SOFA Score for Sepsis Organ Failure
+- STOP-BANG for Obstructive Sleep Apnea
+- TIMI Risk Score for UA/NSTEMI
+- tPA Dosing for Acute Stroke
+- tPA Dosing for PE and MI
+- Transtubular Potassium Gradient (TTKG)
+- Wells Criteria for DVT
+- Wells Criteria for PE
+
+</details>
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit issues, feature requests, or pull requests.
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🏥 About CGMH
+
+Chang Gung Memorial Hospital (CGMH) is one of Taiwan's largest medical centers, committed to providing excellent healthcare services and advancing medical technology.

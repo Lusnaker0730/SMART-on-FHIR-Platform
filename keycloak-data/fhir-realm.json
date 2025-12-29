@@ -12,27 +12,41 @@
       "protocol": "openid-connect",
       "redirectUris": [
         "*"
+      ],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "fhir-smart-scopes"
       ]
     },
     {
       "clientId": "smart_cds_platform",
       "enabled": true,
-      "publicClient": true,     
+      "publicClient": true,
       "directAccessGrantsEnabled": false,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "authorizationServicesEnabled": false,
-      "clientAuthenticatorType": "none", 
-      "redirectUris": ["http://localhost:8085/*", "http://localhost:9009/*"],
-      "webOrigins": ["*"],
+      "clientAuthenticatorType": "none",
+      "redirectUris": [
+        "http://localhost:8085/*",
+        "http://localhost:9009/*"
+      ],
+      "webOrigins": [
+        "*"
+      ],
       "defaultClientScopes": [
         "openid",
         "profile",
         "email",
         "fhir-smart-scopes"
       ],
-      "optionalClientScopes": []
+      "optionalClientScopes": [
+        "launch",
+        "fhirUser"
+      ]
     },
     {
       "clientId": "smart-launcher-client",
@@ -49,18 +63,27 @@
       ]
     }
   ],
-  
   "clientScopes": [
     {
-      "name": "openid",  
+      "name": "openid",
       "protocol": "openid-connect"
     },
     {
-      "name": "profile",  
+      "name": "profile",
       "protocol": "openid-connect"
     },
     {
-      "name": "email",  
+      "name": "email",
+      "protocol": "openid-connect"
+    },
+    {
+      "name": "launch",
+      "description": "SMART launch scope",
+      "protocol": "openid-connect"
+    },
+    {
+      "name": "fhirUser",
+      "description": "FHIR User identity scope",
       "protocol": "openid-connect"
     },
     {
@@ -68,12 +91,12 @@
       "protocol": "openid-connect",
       "protocolMappers": [
         {
-          "name": "launch",
+          "name": "audience-mapper",
           "protocol": "openid-connect",
-          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "protocolMapper": "oidc-audience-mapper",
           "config": {
-            "claim.name": "launch",
-            "claim.value": "true",
+            "included.client.audience": "smart_cds_platform",
+            "id.token.claim": "false",
             "access.token.claim": "true"
           }
         },
@@ -83,66 +106,28 @@
           "protocolMapper": "oidc-hardcoded-claim-mapper",
           "config": {
             "claim.name": "fhirUser",
-            "claim.value": "true",
-            "access.token.claim": "true"
+            "claim.value": "Practitioner/fhir-admin",
+            "access.token.claim": "true",
+            "id.token.claim": "true"
           }
         },
         {
-          "name": "patient/*.read",
+          "name": "patient-context",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-hardcoded-claim-mapper",
           "config": {
-            "claim.name": "patient/*.read",
-            "claim.value": "true",
-            "access.token.claim": "true"
+            "claim.name": "patient",
+            "claim.value": "example-patient-id",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
           }
         },
         {
-          "name": "encounter/*.read",
+          "name": "launch-context",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-hardcoded-claim-mapper",
           "config": {
-            "claim.name": "encounter/*.read",
-            "claim.value": "true",
-            "access.token.claim": "true"
-          }
-        },
-        {
-          "name": "observation/*.read",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-hardcoded-claim-mapper",
-          "config": {
-            "claim.name": "observation/*.read",
-            "claim.value": "true",
-            "access.token.claim": "true"
-          }
-        },
-        {
-          "name": "condition/*.read",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-hardcoded-claim-mapper",
-          "config": {
-            "claim.name": "condition/*.read",
-            "claim.value": "true",
-            "access.token.claim": "true"
-          }
-        },
-        {
-          "name": "medicationrequest/*.read",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-hardcoded-claim-mapper",
-          "config": {
-            "claim.name": "medicationrequest/*.read",
-            "claim.value": "true",
-            "access.token.claim": "true"
-          }
-        },
-        {
-          "name": "procedure/*.read",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-hardcoded-claim-mapper",
-          "config": {
-            "claim.name": "procedure/*.read",
+            "claim.name": "launch",
             "claim.value": "true",
             "access.token.claim": "true"
           }
@@ -150,7 +135,6 @@
       ]
     }
   ],
-  
   "users": [
     {
       "username": "fhir-admin",

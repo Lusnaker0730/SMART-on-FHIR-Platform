@@ -1,198 +1,53 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMART 平台 - 啟動中</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0;
-        }
-        .launch-container {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 400px;
-        }
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-        p {
-            color: #7f8c8d;
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="launch-container">
-        <h1>🏥 SMART 平台</h1>
-        <div class="spinner"></div>
-        <p>正在初始化 SMART on FHIR 連接...</p>
-        <p>請稍候，系統正在與 EHR 建立連接</p>
-    </div>
 
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' https://cdn.jsdelivr.net https://launch.smarthealthit.org https://*.smarthealthit.org; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net https://launch.smarthealthit.org https://*.smarthealthit.org http://localhost:9009 http://localhost:8083 http://localhost:8080;" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <!-- X-Frame-Options removed - can only be set via HTTP header, not meta tag -->
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()" />
+
+    <title>CGMH EHRCALC on FHIR</title>
+</head>
+
+<body>
     <script src="https://cdn.jsdelivr.net/npm/fhirclient/build/fhir-client.js"></script>
     <script>
-
-        console.log('SMART Launch 開始...');
-
         const urlParams = new URLSearchParams(window.location.search);
+        const iss = urlParams.get('iss');
 
-        const iss = "http://localhost:8083/fhir-server/api/v4/"; 
-        const launch = urlParams.get('launch'); 
+        const config = {
+            // The client_id below is a sample public client for a SMART sandbox.
+            // You can create your own client at https://smarthealthit.org/
+            client_id: 'smart_cds_platform',
+            // Provide a default issuer for standalone testing
+            // 注意: IBM FHIR Server 的路徑是 /fhir-server/ (不是 /fhir-server/api/v4/)
+            iss: 'http://localhost:8083/fhir-server',
+            // 使用 Keycloak 支持的 scope（SMART on FHIR scopes 已在 fhir-smart-scopes 中配置）
+            scope: 'openid profile fhirUser launch',
+            redirect_uri: './index.html',
+            completeInTarget: true
+        };
 
-        const KEYCLOAK_AUTH_URL = "http://localhost:8080/realms/fhir/protocol/openid-connect/auth";
-        const REDIRECT_URI = "http://localhost:8085/index.html";
-        // 客戶端 ID (Client ID)
-        const CLIENT_ID = "smart_cds_platform"; 
-        // const SCOPE = "launch openid fhirUser patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read";
-        const SCOPE = "openid";
-
-
-        // 檢查是否為 Launch (只需檢查 launch 參數，因為 iss 已修正)
-        if (launch) { 
-            console.log('偵測到 Launch 參數 - 正在直接跳轉到 Keycloak 進行授權');
-            
-            const authUrl = KEYCLOAK_AUTH_URL +
-                '?response_type=code' +
-                '&client_id=' + CLIENT_ID +
-                '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
-                '&scope=' + encodeURIComponent(SCOPE) +
-                // 關鍵點：使用硬編碼的正確 iss 值
-                '&iss=' + encodeURIComponent(iss) + 
-                '&launch=' + encodeURIComponent(launch);
-
-            console.log('Keycloak 授權 URL:', authUrl);
-            
-            // 使用最底層的重定向
-            window.location.href = authUrl;
-            
-        } else {
-            console.log('無 Launch 參數，導向主頁並顯示錯誤');
-            window.location.replace('./index.html');
-        }
-        
-
-        // 更新狀態顯示
-        function updateStatus(title, subtitle) {
-            const container = document.querySelector('.launch-container');
-            container.querySelector('p:first-of-type').textContent = title;
-            container.querySelector('p:last-of-type').textContent = subtitle;
+        // Fix for SMART Launcher integration:
+        // If launching from local SMART Launcher (port 9009), force use of Keycloak (port 8080) for Auth.
+        // This allows using the Launcher's Patient Picker while authenticating via Keycloak.
+        if (iss && iss.includes('localhost:9009')) {
+            console.log('Detected local SMART Launcher. ROI overriding Auth endpoints to Keycloak.');
+            config.authorizeUri = 'http://localhost:8080/realms/fhir/protocol/openid-connect/auth';
+            config.tokenUri = 'http://localhost:8080/realms/fhir/protocol/openid-connect/token';
+            // We let fhir-client use 'iss' as the serviceUrl (proxy), so we don't set serverUrl explicitly unless needed.
         }
 
-        // 錯誤處理
-        window.addEventListener('error', function(e) {
-            console.error('SMART 啟動錯誤:', e.error);
-            
-            // 檢查是否為 Web Crypto API 相關錯誤
-            const isSecureContextError = e.error?.message?.includes('secure context') || 
-                                       e.error?.message?.includes('subtle crypto');
-            
-            if (isSecureContextError) {
-                document.querySelector('.launch-container').innerHTML = `
-                    <h1>🏥 SMART 平台</h1>
-                    <div style="color: #f39c12; margin: 20px 0;">
-                        <i class="fas fa-shield-alt"></i>
-                        <p>安全上下文要求</p>
-                    </div>
-                    <p><strong>解決方案：</strong></p>
-                    <div style="text-align: left; margin: 15px 0; padding: 10px; background: #f8f9fa; border-radius: 5px;">
-                        <p>• 確保應用運行在 <code>localhost</code> 或 <code>127.0.0.1</code></p>
-                        <p>• 當前 URL: <code>${window.location.href}</code></p>
-                        <p>• 建議的 URL: <code>http://localhost:8081/launch.html${window.location.search}</code></p>
-                    </div>
-                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                        <button onclick="window.location.href='http://localhost:8081/launch.html${window.location.search}'" 
-                                style="padding: 10px 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                            使用 localhost
-                        </button>
-                        <button onclick="bypassSecurityCheck()" 
-                                style="padding: 10px 15px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                            跳過安全檢查
-                        </button>
-                        <button onclick="window.location.reload()" 
-                                style="padding: 10px 15px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                            重新嘗試
-                        </button>
-                    </div>
-                `;
-            } else {
-                document.querySelector('.launch-container').innerHTML = `
-                    <h1>🏥 SMART 平台</h1>
-                    <div style="color: #e74c3c; margin: 20px 0;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p>啟動失敗</p>
-                    </div>
-                    <p>錯誤: ${e.error?.message || '未知錯誤'}</p>
-                    <p>Launch 參數: iss=${iss || '無'}, launch=${launch || '無'}</p>
-                    <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        重新嘗試
-                    </button>
-                `;
-            }
-        });
-
-        // 跳過安全檢查的函數
-        function bypassSecurityCheck() {
-            updateStatus('正在啟用兼容模式...', '跳過 Web Crypto API 安全檢查');
-            
-            try {
-                // 嘗試使用簡化的授權流程
-                const authUrl = iss + '/authorize?' + 
-                    'response_type=code&' +
-                    'client_id=smart_cds_platform&' +
-                    'redirect_uri=' + encodeURIComponent('./index.html') + '&' +
-                    'scope=' + encodeURIComponent('openid fhirUser patient/*.read encounter/*.read observation/*.read condition/*.read medicationrequest/*.read procedure/*.read') +
-                    (launch ? '&launch=' + encodeURIComponent(launch) : '');
-                
-                console.log('兼容模式授權 URL:', authUrl);
-                window.location.href = authUrl;
-                
-            } catch (error) {
-                console.error('兼容模式啟動失敗:', error);
-                document.querySelector('.launch-container').innerHTML = `
-                    <h1>🏥 SMART 平台</h1>
-                    <div style="color: #e74c3c; margin: 20px 0;">
-                        <i class="fas fa-times-circle"></i>
-                        <p>兼容模式失敗</p>
-                    </div>
-                    <p>請使用 HTTPS 或正確的 localhost 環境</p>
-                    <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        重新嘗試
-                    </button>
-                `;
-            }
-        }
-
-        // 超時處理
-        setTimeout(() => {
-            if (window.location.href === window.location.href) {
-                console.warn('Launch 超時');
-                updateStatus('連接超時', '請檢查網路連線或重試');
-            }
-        }, 10000);
+        FHIR.oauth2.authorize(config);
     </script>
 </body>
-</html> 
+
+</html>

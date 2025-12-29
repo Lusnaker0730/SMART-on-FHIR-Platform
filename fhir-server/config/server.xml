@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<server description="FHIR Server Final Configuration">
+<server description="FHIR Server with Keycloak OAuth">
 
     <variable name="fhir.config.dir" value="/opt/ol/wlp/usr/servers/defaultServer/config/default"/>
 
@@ -19,18 +19,27 @@
     <httpEndpoint id="defaultHttpEndpoint" host="*" httpPort="9080" httpsPort="9443"/>
     <keyStore id="defaultKeyStore" password="change-password" />
 
-    <cors domain="*"
+    <!-- CORS Configuration -->
+    <cors domain="/"
+      allowedOrigins="http://localhost:8085, http://localhost:9009, http://127.0.0.1:8085, http://127.0.0.1:9009, *"
       allowCredentials="true"
-      allowedHttpHeaders="Content-Type,Authorization,X-FHIR-TENANT-ID"
-      allowedHttpMethods="GET,POST,PUT,DELETE,OPTIONS" />
+      allowedHeaders="Origin, Content-Type, Accept, Authorization, X-FHIR-TENANT-ID, X-FHIR-DSID, X-Requested-With, Cache-Control"
+      allowedMethods="GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD"
+      exposeHeaders="Location, Content-Location, ETag, Last-Modified"
+      maxAge="3600" />
 
-    <jwtConsumer id="fhirJwtConsumer"
+    <!-- MicroProfile JWT Configuration for Keycloak Bearer Token Authentication -->
+    <mpJwt id="fhirMpJwt"
         jwksUri="http://keycloak:8080/realms/fhir/protocol/openid-connect/certs"
-        audiences="smart_cds_platform" 
-        issuer="http://localhost:8080/realms/fhir" 
-        signatureAlgorithm="RS256"
-        scopeClaim="scope" />
+        audiences="smart_cds_platform, hapi-fhir-client"
+        issuer="http://localhost:8080/realms/fhir"
+        userNameAttribute="sub"
+        groupNameAttribute="groups"
+        clockSkew="5m"
+        tokenReuse="true"
+        ignoreApplicationAuthMethod="true" />
 
+    <!-- FHIR Server Web Application -->
     <webApplication id="fhir-server" 
                     location="/opt/ol/wlp/usr/servers/defaultServer/apps/fhir-server.war" 
                     name="fhir-server">
@@ -47,6 +56,14 @@
         <folder dir="/opt/ol/wlp/usr/servers/defaultServer/userlib" />
     </library>
 
+    <!-- Derby shared library for bootstrap database -->
+    <library id="sharedLibDerby">
+        <fileset dir="/opt/ol/wlp/usr/shared/resources/lib/derby" includes="*.jar"/>
+    </library>
+
+    <!-- Include default configurations (datasource, bulkdata, etc.) -->
+    <include location="/opt/ol/wlp/usr/servers/defaultServer/configDropins/defaults/datasource.xml"/>
+    <include location="/opt/ol/wlp/usr/servers/defaultServer/configDropins/defaults/bulkdata.xml"/>
     <include location="/opt/ol/wlp/usr/servers/defaultServer/configDropins/defaults/open-default-port.xml"/>
 
 </server>
