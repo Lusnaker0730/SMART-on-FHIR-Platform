@@ -60,17 +60,29 @@ export function calculateAge(birthDate) {
     return age;
 }
 /**
- * Extract patient ID from access token JWT payload (Keycloak puts it there)
+ * Extract patient ID from various sources with priority:
+ * 1. SMART Launcher context (stored in sessionStorage)
+ * 2. Standard SMART client.patient.id
+ * 3. Keycloak JWT token patient claim
  * @param {Object} client The FHIR client instance.
  * @returns {string|null} The patient ID or null if not found.
  */
 function getPatientIdFromToken(client) {
     try {
-        // Try to get from client.patient.id first (standard SMART way)
+        // Priority 1: Check SMART Launcher context (from launch.html)
+        // This allows SMART Launcher to override the default patient in Keycloak
+        const smartLauncherPatient = sessionStorage.getItem('smart_launcher_patient');
+        if (smartLauncherPatient) {
+            console.log('Using patient ID from SMART Launcher:', smartLauncherPatient);
+            return smartLauncherPatient;
+        }
+        
+        // Priority 2: Try to get from client.patient.id (standard SMART way)
         if (client?.patient?.id) {
             return client.patient.id;
         }
-        // Fall back to extracting from access token JWT (Keycloak)
+        
+        // Priority 3: Fall back to extracting from access token JWT (Keycloak)
         const state = client?.state;
         const accessToken = state?.tokenResponse?.access_token;
         if (accessToken) {
@@ -78,6 +90,7 @@ function getPatientIdFromToken(client) {
             if (parts.length === 3) {
                 const payload = JSON.parse(atob(parts[1]));
                 if (payload.patient) {
+                    console.log('Using patient ID from Keycloak token:', payload.patient);
                     return payload.patient;
                 }
             }
