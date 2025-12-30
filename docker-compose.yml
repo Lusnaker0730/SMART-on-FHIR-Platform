@@ -80,8 +80,8 @@ services:
       PICKER_CONFIG_R4_IFRAME_LAUNCH: "false"
       # Keycloak URL - 對外給瀏覽器使用
       AUTH_SERVER_R4: http://localhost:8080/realms/fhir/protocol/openid-connect/auth
-      # Keycloak URL - 對內給 token 交換使用
-      TOKEN_SERVER_R4: http://localhost:8080/realms/fhir/protocol/openid-connect/token
+      # Keycloak URL - 對內給 token 交換使用 (使用 Docker 內部網路地址)
+      TOKEN_SERVER_R4: http://keycloak:8080/realms/fhir/protocol/openid-connect/token
     networks:
       - fhirnet
 

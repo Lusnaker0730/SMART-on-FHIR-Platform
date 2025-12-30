@@ -117,7 +117,7 @@
           "protocolMapper": "oidc-hardcoded-claim-mapper",
           "config": {
             "claim.name": "patient",
-            "claim.value": "example-patient-id",
+            "claim.value": "test-patient-1",
             "access.token.claim": "true",
             "id.token.claim": "false"
           }

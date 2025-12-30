@@ -60,6 +60,36 @@ export function calculateAge(birthDate) {
     return age;
 }
 /**
+ * Extract patient ID from access token JWT payload (Keycloak puts it there)
+ * @param {Object} client The FHIR client instance.
+ * @returns {string|null} The patient ID or null if not found.
+ */
+function getPatientIdFromToken(client) {
+    try {
+        // Try to get from client.patient.id first (standard SMART way)
+        if (client?.patient?.id) {
+            return client.patient.id;
+        }
+        // Fall back to extracting from access token JWT (Keycloak)
+        const state = client?.state;
+        const accessToken = state?.tokenResponse?.access_token;
+        if (accessToken) {
+            const parts = accessToken.split('.');
+            if (parts.length === 3) {
+                const payload = JSON.parse(atob(parts[1]));
+                if (payload.patient) {
+                    return payload.patient;
+                }
+            }
+        }
+        return null;
+    } catch (e) {
+        console.error('Error extracting patient ID from token:', e);
+        return null;
+    }
+}
+
+/**
  * Fetches patient data and displays it in a designated div.
  * @param {Object} client The FHIR client instance.
  * @param {HTMLElement} patientInfoDiv The div element to display patient info in.
@@ -86,19 +116,49 @@ export function displayPatientInfo(client, patientInfoDiv) {
     if (cachedPatient) {
         renderPatient(JSON.parse(cachedPatient));
     }
-    if (!client?.patient?.id) {
+    
+    // Try to get patient ID from client or token
+    const patientId = getPatientIdFromToken(client);
+    
+    if (!patientId) {
         if (!cachedPatient) {
             patientInfoDiv.innerHTML =
                 '<p>No patient data available. Please launch from the EHR.</p>';
         }
         return Promise.resolve(cachedPatient ? JSON.parse(cachedPatient) : null);
     }
-    return client.patient.read().then((patient) => {
+    
+    // Fetch patient data using the extracted patient ID
+    const serverUrl = client?.state?.serverUrl;
+    const accessToken = client?.state?.tokenResponse?.access_token;
+    
+    if (!serverUrl || !accessToken) {
+        if (!cachedPatient) {
+            patientInfoDiv.innerHTML =
+                '<p>No patient data available. Please launch from the EHR.</p>';
+        }
+        return Promise.resolve(cachedPatient ? JSON.parse(cachedPatient) : null);
+    }
+    
+    return fetch(`${serverUrl}/Patient/${patientId}`, {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Accept': 'application/fhir+json'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
+    .then((patient) => {
         sessionStorage.setItem('patientData', JSON.stringify(patient));
         renderPatient(patient);
         return patient;
-    }, (error) => {
-        console.error(error);
+    })
+    .catch((error) => {
+        console.error('Error fetching patient:', error);
         if (!cachedPatient) {
             patientInfoDiv.innerText = 'Error fetching patient data.';
         }

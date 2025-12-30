@@ -37,13 +37,33 @@
         };
 
         // Fix for SMART Launcher integration:
-        // If launching from local SMART Launcher (port 9009), force use of Keycloak (port 8080) for Auth.
-        // This allows using the Launcher's Patient Picker while authenticating via Keycloak.
+        // If launching from local SMART Launcher (port 9009), redirect to real FHIR Server
+        // The real FHIR Server's metadata contains Keycloak OAuth endpoints
         if (iss && iss.includes('localhost:9009')) {
-            console.log('Detected local SMART Launcher. ROI overriding Auth endpoints to Keycloak.');
-            config.authorizeUri = 'http://localhost:8080/realms/fhir/protocol/openid-connect/auth';
-            config.tokenUri = 'http://localhost:8080/realms/fhir/protocol/openid-connect/token';
-            // We let fhir-client use 'iss' as the serviceUrl (proxy), so we don't set serverUrl explicitly unless needed.
+            console.log('Detected local SMART Launcher. Redirecting to real FHIR Server with Keycloak auth.');
+            
+            // Pass through the launch parameter from SMART Launcher (contains patient context)
+            const launch = urlParams.get('launch');
+            if (launch) {
+                // Decode the launch parameter to extract patient ID
+                try {
+                    const launchData = JSON.parse(atob(launch));
+                    console.log('Launch context:', launchData);
+                    // Store patient ID for later use (the token from Keycloak will have it)
+                    if (launchData.b) {
+                        sessionStorage.setItem('smart_launcher_patient', launchData.b);
+                    }
+                } catch (e) {
+                    console.log('Could not decode launch parameter');
+                }
+            }
+            
+            // fhir-client reads iss from URL first, so we need to modify the URL
+            // Replace the URL iss parameter with the real FHIR Server URL
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('iss', 'http://localhost:8083/fhir-server');
+            window.history.replaceState({}, '', newUrl.toString());
+            console.log('Replaced URL iss to:', newUrl.searchParams.get('iss'));
         }
 
         FHIR.oauth2.authorize(config);
