@@ -1,6 +1,10 @@
 {
   "realm": "fhir",
   "loginTheme": "keycloak",
+  "browserSecurityHeaders": {
+    "xFrameOptions": "ALLOW-FROM http://localhost:9009",
+    "contentSecurityPolicy": "frame-ancestors 'self' http://localhost:9009 http://localhost:8085;"
+  },
   "enabled": true,
   "clients": [
     {

@@ -56,13 +56,15 @@
         <folder dir="/opt/ol/wlp/usr/servers/defaultServer/userlib" />
     </library>
 
-    <!-- Derby shared library for bootstrap database -->
-    <library id="sharedLibDerby">
-        <fileset dir="/opt/ol/wlp/usr/shared/resources/lib/derby" includes="*.jar"/>
-    </library>
+    <!-- PostgreSQL DataSource -->
+    <dataSource id="fhirDataSource" jndiName="jdbc/fhirDataSource" type="javax.sql.DataSource">
+        <jdbcDriver libraryRef="postgresql-library"/>
+        <properties.postgresql serverName="db" portNumber="5432" databaseName="fhirdata" user="fhiruser" password="change-password"/>
+    </dataSource>
 
-    <!-- Include default configurations (datasource, bulkdata, etc.) -->
-    <include location="/opt/ol/wlp/usr/servers/defaultServer/configDropins/defaults/datasource.xml"/>
+    <library id="postgresql-library">
+        <fileset dir="/opt/ol/wlp/usr/servers/defaultServer/userlib" includes="postgresql-*.jar"/>
+    </library>
     <include location="/opt/ol/wlp/usr/servers/defaultServer/configDropins/defaults/bulkdata.xml"/>
     <include location="/opt/ol/wlp/usr/servers/defaultServer/configDropins/defaults/open-default-port.xml"/>
 
