@@ -40,13 +40,14 @@
         tokenReuse="true"
         ignoreApplicationAuthMethod="true" />
 
-    <!-- FHIR Server Web Application -->
+    <!-- FHIR Server Web Application (sandbox: allow unauthenticated reads for Patient Picker) -->
     <webApplication id="fhir-server"
                     location="/opt/ol/wlp/usr/servers/defaultServer/apps/fhir-server.war"
                     name="fhir-server">
         <application-bnd>
             <security-role name="FHIRUsers">
                 <special-subject type="ALL_AUTHENTICATED_USERS" />
+                <special-subject type="EVERYONE" />
             </security-role>
         </application-bnd>
         <classloader commonLibraryRef="fhirUserLib" />

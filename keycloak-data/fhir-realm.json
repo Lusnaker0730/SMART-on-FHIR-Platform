@@ -119,18 +119,6 @@
           }
         },
         {
-          "name": "patient-context",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "config": {
-            "claim.name": "patient",
-            "user.attribute": "patient_id",
-            "access.token.claim": "true",
-            "id.token.claim": "false",
-            "jsonType.label": "String"
-          }
-        },
-        {
           "name": "launch-context",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-hardcoded-claim-mapper",
@@ -148,9 +136,7 @@
       "username": "fhir-admin",
       "enabled": true,
       "emailVerified": true,
-      "attributes": {
-        "patient_id": ["test-patient-1"]
-      },
+      "attributes": {},
       "credentials": [
         {
           "type": "password",

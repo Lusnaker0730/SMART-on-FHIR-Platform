@@ -207,17 +207,17 @@ server.port=9080
 
 #### 8a. `platform/launch.html`
 
-有 3 處需要改：
+launch.html 包含 Patient Picker 導向邏輯和 FHIR ISS 設定，需要替換以下 URL：
 
 ```javascript
-// 第 32 行 - 預設 FHIR issuer
-iss: '<PROTOCOL>://<HOST>:<FHIR_PORT>/fhir-server',
+// PICKER_URL - Patient Picker 頁面位址
+var PICKER_URL = '<PROTOCOL>://<HOST>:<LAUNCHER_PORT>/patient-select.html';
 
-// 第 42 行 - SMART Launcher 偵測
+// ISS 偵測 - SMART Launcher 的主機名稱
 if (iss && iss.includes('<HOST>:<LAUNCHER_PORT>')) {
 
-// 第 64 行 - 重導向 FHIR Server
-newUrl.searchParams.set('iss', '<PROTOCOL>://<HOST>:<FHIR_PORT>/fhir-server');
+// ISS 替換 - 真正的 FHIR Server 位址（出現多處）
+'<PROTOCOL>://<HOST>:<FHIR_PORT>/fhir-server'
 ```
 
 CSP meta tag（第 11 行）：
@@ -241,6 +241,22 @@ server_name <HOST>;
 # 第 16 行 和 第 34 行 - CSP（出現兩次）
 # 替換所有 http://localhost:9009, http://localhost:8083, http://localhost:8080
 ```
+
+---
+
+#### 8d. `patient-picker/patient-select.html`
+
+Patient Picker 頁面直接查詢 FHIR Server，需要更新 FHIR base URL：
+
+```javascript
+// 改前
+var FHIR_BASE = 'http://localhost:8083/fhir-server';
+// 改後
+var FHIR_BASE = '<PROTOCOL>://<HOST>:<FHIR_PORT>/fhir-server';
+```
+
+> 注意：此檔案透過 docker-compose volume 掛載到 SMART Launcher 容器的 `/app/static/` 目錄，
+> 可透過 `<PROTOCOL>://<HOST>:<LAUNCHER_PORT>/patient-select.html` 存取。
 
 ---
 
@@ -271,9 +287,9 @@ grep -rn "localhost" --include="*.yml" --include="*.yaml" --include="*.xml" \
 | 原始值 | 替換為 | 出現檔案數 |
 |--------|--------|-----------|
 | `http://localhost:8080` | `<PROTOCOL>://<HOST>:<KEYCLOAK_PORT>` | 7 個檔案 |
-| `http://localhost:8083` | `<PROTOCOL>://<HOST>:<FHIR_PORT>` | 5 個檔案 |
+| `http://localhost:8083` | `<PROTOCOL>://<HOST>:<FHIR_PORT>` | 6 個檔案（含 patient-select.html） |
 | `http://localhost:8085` | `<PROTOCOL>://<HOST>:<PLATFORM_PORT>` | 4 個檔案 |
-| `http://localhost:9009` | `<PROTOCOL>://<HOST>:<LAUNCHER_PORT>` | 6 個檔案 |
+| `http://localhost:9009` | `<PROTOCOL>://<HOST>:<LAUNCHER_PORT>` | 7 個檔案（含 launch.html Picker URL） |
 | `http://127.0.0.1:8085` | `<PROTOCOL>://<HOST>:<PLATFORM_PORT>` | 2 個檔案 |
 | `http://127.0.0.1:9009` | `<PROTOCOL>://<HOST>:<LAUNCHER_PORT>` | 1 個檔案 |
 
@@ -324,6 +340,10 @@ ports:
 openssl rand -base64 32
 ```
 
+### FHIR Server 認證
+
+開發環境中，`fhir-server/config/server.xml` 設定 `EVERYONE` special-subject 以允許未認證的 FHIR 查詢（供 Patient Picker 使用）。**正式環境應移除此設定**，改為讓 Patient Picker 在查詢時攜帶 token，或使用有認證的 Picker 機制。
+
 ### 資料持久化
 
 - PostgreSQL 資料存在 Docker volume `postgres_data`
@@ -355,8 +375,13 @@ TOKEN=$(curl -s -X POST "<PROTOCOL>://<HOST>:<KEYCLOAK_PORT>/realms/fhir/protoco
 
 curl -s -H "Authorization: Bearer $TOKEN" "<PROTOCOL>://<HOST>:<FHIR_PORT>/fhir-server/Patient/test-patient-1"
 
-# 6. 開瀏覽器測試完整流程
-# 訪問 <PROTOCOL>://<HOST>:<PLATFORM_PORT>/launch.html
+# 6. 測試 Patient Picker
+curl -s -o /dev/null -w "%{http_code}" "<PROTOCOL>://<HOST>:<LAUNCHER_PORT>/patient-select.html"
+# 應返回 200
+
+# 7. 開瀏覽器測試完整流程
+# 訪問 <PROTOCOL>://<HOST>:<LAUNCHER_PORT> → 不填病人 → Launch → 應導向 Patient Picker
+# 選擇病人 → Keycloak 登入 → 進入 Platform
 ```
 
 ---
@@ -372,7 +397,8 @@ curl -s -H "Authorization: Bearer $TOKEN" "<PROTOCOL>://<HOST>:<FHIR_PORT>/fhir-
 | 5 | `fhir-server/config/default/fhir-server-config.json` | OAuth URLs | 低 |
 | 6 | `fhir-server/hapi.properties` | server_address | 低 |
 | 7 | `platform/index.html` | CSP meta tag | 低 |
-| 8 | `platform/launch.html` | FHIR URL, Launcher 偵測, CSP | 中 |
+| 8 | `platform/launch.html` | FHIR URL, Launcher 偵測, Picker URL, CSP | 中 |
 | 9 | `platform/nginx.conf` | server_name, CSP | 低 |
+| 10 | `patient-picker/patient-select.html` | FHIR Server base URL | 低 |
 
-**總共 9 個檔案，約 40 處需要修改**。模式重複，主要就是替換 4 組 `localhost:<port>` URL。
+**總共 10 個檔案，約 42 處需要修改**。模式重複，主要就是替換 4 組 `localhost:<port>` URL。

@@ -76,38 +76,33 @@ export function displayPatientInfo(client, patientInfoDiv) {
         const safeBirthDate = escapeHTML(patient.birthDate);
         const safeGender = escapeHTML(patient.gender);
         patientInfoDiv.innerHTML = `
-            <p><strong>Name:</strong> ${safeName}</p>
-            <p><strong>Birth Date:</strong> ${safeBirthDate} (Age: ${age})</p>
-            <p><strong>Gender:</strong> ${safeGender}</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <div>
+                    <p><strong>Name:</strong> ${safeName}</p>
+                    <p><strong>Birth Date:</strong> ${safeBirthDate} (Age: ${age})</p>
+                    <p><strong>Gender:</strong> ${safeGender}</p>
+                </div>
+                <button id="switch-patient-btn" style="padding:6px 14px;background:#1a73e8;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;white-space:nowrap;">Switch Patient</button>
+            </div>
         `;
+        const switchBtn = patientInfoDiv.querySelector('#switch-patient-btn');
+        if (switchBtn) {
+            switchBtn.addEventListener('click', () => {
+                sessionStorage.removeItem('smart_launcher_patient');
+                sessionStorage.removeItem('patientData');
+                sessionStorage.removeItem('SMART_KEY');
+                window.location.href = 'launch.html';
+            });
+        }
     };
     // First, try to display data from session storage for a faster UI response.
     const cachedPatient = sessionStorage.getItem('patientData');
     if (cachedPatient) {
         renderPatient(JSON.parse(cachedPatient));
     }
-    // If client has no patient ID, try to extract from JWT access token or sessionStorage
+    // If client has no patient ID, read from sessionStorage (set by Patient Picker or launch.html)
     if (client && !client.patient?.id) {
-        let patientId = null;
-        // 1. Try to extract patient ID from JWT access token (Keycloak puts it inside the JWT)
-        try {
-            const tokenResponse = client.state?.tokenResponse;
-            const accessToken = tokenResponse?.access_token;
-            if (accessToken) {
-                const payload = JSON.parse(atob(accessToken.split('.')[1]));
-                if (payload.patient) {
-                    patientId = payload.patient;
-                }
-            }
-        }
-        catch (e) {
-            console.log('Could not extract patient from JWT');
-        }
-        // 2. Fallback: try sessionStorage (set by launch.html from SMART Launcher)
-        if (!patientId) {
-            patientId = sessionStorage.getItem('smart_launcher_patient');
-        }
-        // 3. Set up patient context on the client
+        const patientId = sessionStorage.getItem('smart_launcher_patient');
         if (patientId) {
             client.patient = {
                 id: patientId,

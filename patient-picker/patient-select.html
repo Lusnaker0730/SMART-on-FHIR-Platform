@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Patient</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 720px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 1.6rem;
+            color: #1a73e8;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 10px 14px;
+            font-size: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-box input:focus {
+            border-color: #1a73e8;
+        }
+        .search-box button {
+            padding: 10px 20px;
+            background: #1a73e8;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+        .search-box button:hover { background: #1557b0; }
+        #status {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #ddd;
+            border-top-color: #1a73e8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        thead th {
+            background: #1a73e8;
+            color: #fff;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        tbody tr {
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        tbody tr:hover { background: #e8f0fe; }
+        tbody td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.95rem;
+        }
+        tbody tr:last-child td { border-bottom: none; }
+        .gender-male { color: #1a73e8; }
+        .gender-female { color: #e91e63; }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .error {
+            text-align: center;
+            padding: 20px;
+            color: #d32f2f;
+            background: #fce4ec;
+            border-radius: 8px;
+        }
+        .patient-count {
+            text-align: right;
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Select Patient</h1>
+        <p class="subtitle">Choose a patient to launch the application</p>
+
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Search by name..." autofocus>
+            <button id="search-btn">Search</button>
+        </div>
+
+        <div id="patient-count" class="patient-count"></div>
+        <div id="status"><span class="spinner"></span> Loading patients...</div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        (function() {
+            // FHIR Server base URL (browser-accessible)
+            var FHIR_BASE = 'http://localhost:8083/fhir-server';
+
+            var searchInput = document.getElementById('search-input');
+            var searchBtn = document.getElementById('search-btn');
+            var statusDiv = document.getElementById('status');
+            var resultsDiv = document.getElementById('results');
+            var countDiv = document.getElementById('patient-count');
+
+            // Get returnUrl from query params
+            var params = new URLSearchParams(window.location.search);
+            var returnUrl = params.get('returnUrl') || '';
+
+            // Debounce timer
+            var debounceTimer = null;
+
+            function calculateAge(birthDate) {
+                if (!birthDate) return '—';
+                var today = new Date();
+                var bd = new Date(birthDate);
+                var age = today.getFullYear() - bd.getFullYear();
+                var m = today.getMonth() - bd.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < bd.getDate())) age--;
+                return age;
+            }
+
+            function formatGender(g) {
+                if (!g) return '—';
+                var map = { male: 'Male', female: 'Female', other: 'Other', unknown: 'Unknown' };
+                return map[g] || g;
+            }
+
+            function getPatientName(patient) {
+                if (!patient.name || !patient.name.length) return 'Unknown';
+                var n = patient.name[0];
+                // Prefer text field (e.g. Chinese names)
+                if (n.text) return n.text;
+                var given = (n.given || []).join(' ');
+                var family = n.family || '';
+                return (given + ' ' + family).trim() || 'Unknown';
+            }
+
+            function selectPatient(patientId) {
+                if (!returnUrl) {
+                    alert('No return URL specified. Please launch from the SMART Launcher.');
+                    return;
+                }
+                // Append patient ID to the return URL
+                var url = new URL(returnUrl);
+                url.searchParams.set('patient', patientId);
+                window.location.href = url.toString();
+            }
+
+            function renderPatients(patients) {
+                if (!patients || patients.length === 0) {
+                    resultsDiv.innerHTML = '<div class="no-results">No patients found.</div>';
+                    countDiv.textContent = '';
+                    return;
+                }
+
+                countDiv.textContent = patients.length + ' patient(s) found';
+
+                var html = '<table><thead><tr>'
+                    + '<th>Name</th><th>Gender</th><th>Birth Date</th><th>Age</th><th>ID</th>'
+                    + '</tr></thead><tbody>';
+
+                for (var i = 0; i < patients.length; i++) {
+                    var p = patients[i];
+                    var name = getPatientName(p);
+                    var gender = formatGender(p.gender);
+                    var genderClass = p.gender === 'male' ? 'gender-male' : (p.gender === 'female' ? 'gender-female' : '');
+                    var birthDate = p.birthDate || '—';
+                    var age = calculateAge(p.birthDate);
+                    var id = p.id || '';
+
+                    html += '<tr onclick="window.__selectPatient(\'' + id + '\')">'
+                        + '<td><strong>' + escapeHtml(name) + '</strong></td>'
+                        + '<td class="' + genderClass + '">' + escapeHtml(gender) + '</td>'
+                        + '<td>' + escapeHtml(birthDate) + '</td>'
+                        + '<td>' + age + '</td>'
+                        + '<td><code>' + escapeHtml(id) + '</code></td>'
+                        + '</tr>';
+                }
+
+                html += '</tbody></table>';
+                resultsDiv.innerHTML = html;
+            }
+
+            function escapeHtml(str) {
+                var div = document.createElement('div');
+                div.appendChild(document.createTextNode(str));
+                return div.innerHTML;
+            }
+
+            function fetchPatients(query) {
+                statusDiv.innerHTML = '<span class="spinner"></span> Searching...';
+                statusDiv.style.display = '';
+                resultsDiv.innerHTML = '';
+                countDiv.textContent = '';
+
+                var url = FHIR_BASE + '/Patient?_count=50&_sort=family';
+                if (query && query.trim()) {
+                    url = FHIR_BASE + '/Patient?name=' + encodeURIComponent(query.trim()) + '&_count=50';
+                }
+
+                fetch(url, {
+                    headers: { 'Accept': 'application/fhir+json' }
+                })
+                .then(function(resp) {
+                    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                    return resp.json();
+                })
+                .then(function(bundle) {
+                    statusDiv.style.display = 'none';
+                    var patients = [];
+                    if (bundle.entry) {
+                        for (var i = 0; i < bundle.entry.length; i++) {
+                            if (bundle.entry[i].resource && bundle.entry[i].resource.resourceType === 'Patient') {
+                                patients.push(bundle.entry[i].resource);
+                            }
+                        }
+                    }
+                    renderPatients(patients);
+                })
+                .catch(function(err) {
+                    statusDiv.style.display = 'none';
+                    resultsDiv.innerHTML = '<div class="error">Failed to load patients: ' + escapeHtml(err.message)
+                        + '<br><br>Make sure the FHIR Server is running at <code>' + escapeHtml(FHIR_BASE) + '</code></div>';
+                });
+            }
+
+            // Expose select function globally for onclick handlers
+            window.__selectPatient = selectPatient;
+
+            // Search on Enter key (with debounce for typing)
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function() {
+                    fetchPatients(searchInput.value);
+                }, 300);
+            });
+
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    clearTimeout(debounceTimer);
+                    fetchPatients(searchInput.value);
+                }
+            });
+
+            searchBtn.addEventListener('click', function() {
+                clearTimeout(debounceTimer);
+                fetchPatients(searchInput.value);
+            });
+
+            // Initial load
+            fetchPatients('');
+        })();
+    </script>
+</body>
+</html>
