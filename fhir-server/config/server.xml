@@ -58,21 +58,10 @@
         <folder dir="${server.config.dir}/config/default" />
     </library>
 
-    <!-- Shared library definitions for the supported database types -->
+    <!-- Derby shared library (required by configDropins/defaults/datasource.xml) -->
     <library id="sharedLibDerby">
         <fileset dir="${shared.resource.dir}/lib/derby" includes="*.jar"/>
     </library>
-    <library id="sharedLibPostgres">
-        <fileset dir="${shared.resource.dir}/lib/postgresql" includes="*.jar"/>
-    </library>
-
-    <!-- Derby Embedded DataSource for IBM FHIR Server (default tenant/datastore) -->
-    <dataSource id="fhirDatasourceDefault" jndiName="jdbc/bootstrap_default_default" type="javax.sql.DataSource"
-                statementCacheSize="200" syncQueryTimeoutWithTransactionTimeout="true">
-        <jdbcDriver javax.sql.XADataSource="org.apache.derby.jdbc.EmbeddedXADataSource" libraryRef="sharedLibDerby"/>
-        <properties.derby.embedded databaseName="derby/fhirDB" createDatabase="create"/>
-        <connectionManager maxPoolSize="50"/>
-    </dataSource>
 
     <include location="${server.config.dir}/configDropins/defaults/bulkdata.xml"/>
     <include location="${server.config.dir}/configDropins/defaults/open-default-port.xml"/>

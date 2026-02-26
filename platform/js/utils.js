@@ -86,17 +86,36 @@ export function displayPatientInfo(client, patientInfoDiv) {
     if (cachedPatient) {
         renderPatient(JSON.parse(cachedPatient));
     }
-    // If client has no patient ID, try to use the one from SMART Launcher sessionStorage
-    if (!client?.patient?.id) {
-        const launcherPatientId = sessionStorage.getItem('smart_launcher_patient');
-        if (launcherPatientId && client) {
-            // Override client's patient context with the launcher-provided patient ID
-            client.patient = client.patient || {};
-            client.patient.id = launcherPatientId;
-            client.patient.read = () => client.request(`Patient/${launcherPatientId}`);
-            client.patient.request = (relativeUrl) => {
-                const separator = relativeUrl.includes('?') ? '&' : '?';
-                return client.request(`${relativeUrl}${separator}patient=${launcherPatientId}`);
+    // If client has no patient ID, try to extract from JWT access token or sessionStorage
+    if (client && !client.patient?.id) {
+        let patientId = null;
+        // 1. Try to extract patient ID from JWT access token (Keycloak puts it inside the JWT)
+        try {
+            const tokenResponse = client.state?.tokenResponse;
+            const accessToken = tokenResponse?.access_token;
+            if (accessToken) {
+                const payload = JSON.parse(atob(accessToken.split('.')[1]));
+                if (payload.patient) {
+                    patientId = payload.patient;
+                }
+            }
+        }
+        catch (e) {
+            console.log('Could not extract patient from JWT');
+        }
+        // 2. Fallback: try sessionStorage (set by launch.html from SMART Launcher)
+        if (!patientId) {
+            patientId = sessionStorage.getItem('smart_launcher_patient');
+        }
+        // 3. Set up patient context on the client
+        if (patientId) {
+            client.patient = {
+                id: patientId,
+                read: () => client.request(`Patient/${patientId}`),
+                request: (relativeUrl) => {
+                    const sep = relativeUrl.includes('?') ? '&' : '?';
+                    return client.request(`${relativeUrl}${sep}patient=${patientId}`);
+                }
             };
         }
     }

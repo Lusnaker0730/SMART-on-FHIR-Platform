@@ -99,6 +99,42 @@ export function displayPatientInfo(client: any, patientInfoDiv: HTMLElement): Pr
         renderPatient(JSON.parse(cachedPatient));
     }
 
+    // If client has no patient ID, try to extract from JWT access token or sessionStorage
+    if (client && !client.patient?.id) {
+        let patientId: string | null = null;
+
+        // 1. Try to extract patient ID from JWT access token (Keycloak puts it inside the JWT)
+        try {
+            const tokenResponse = client.state?.tokenResponse;
+            const accessToken = tokenResponse?.access_token;
+            if (accessToken) {
+                const payload = JSON.parse(atob(accessToken.split('.')[1]));
+                if (payload.patient) {
+                    patientId = payload.patient;
+                }
+            }
+        } catch (e) {
+            console.log('Could not extract patient from JWT');
+        }
+
+        // 2. Fallback: try sessionStorage (set by launch.html from SMART Launcher)
+        if (!patientId) {
+            patientId = sessionStorage.getItem('smart_launcher_patient');
+        }
+
+        // 3. Set up patient context on the client
+        if (patientId) {
+            client.patient = {
+                id: patientId,
+                read: () => client.request(`Patient/${patientId}`),
+                request: (relativeUrl: string) => {
+                    const sep = relativeUrl.includes('?') ? '&' : '?';
+                    return client.request(`${relativeUrl}${sep}patient=${patientId}`);
+                }
+            };
+        }
+    }
+
     if (!client?.patient?.id) {
         if (!cachedPatient) {
             patientInfoDiv.innerHTML =
