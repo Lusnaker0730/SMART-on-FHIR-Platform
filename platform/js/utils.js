@@ -86,6 +86,20 @@ export function displayPatientInfo(client, patientInfoDiv) {
     if (cachedPatient) {
         renderPatient(JSON.parse(cachedPatient));
     }
+    // If client has no patient ID, try to use the one from SMART Launcher sessionStorage
+    if (!client?.patient?.id) {
+        const launcherPatientId = sessionStorage.getItem('smart_launcher_patient');
+        if (launcherPatientId && client) {
+            // Override client's patient context with the launcher-provided patient ID
+            client.patient = client.patient || {};
+            client.patient.id = launcherPatientId;
+            client.patient.read = () => client.request(`Patient/${launcherPatientId}`);
+            client.patient.request = (relativeUrl) => {
+                const separator = relativeUrl.includes('?') ? '&' : '?';
+                return client.request(`${relativeUrl}${separator}patient=${launcherPatientId}`);
+            };
+        }
+    }
     if (!client?.patient?.id) {
         if (!cachedPatient) {
             patientInfoDiv.innerHTML =

@@ -15,7 +15,8 @@
       "directAccessGrantsEnabled": true,
       "protocol": "openid-connect",
       "redirectUris": [
-        "*"
+        "http://localhost:8083/*",
+        "http://localhost:8080/*"
       ],
       "defaultClientScopes": [
         "openid",
@@ -35,11 +36,13 @@
       "authorizationServicesEnabled": false,
       "clientAuthenticatorType": "none",
       "redirectUris": [
-        "http://localhost:8085/*",
+        "http://localhost:8085/index.html",
+        "http://localhost:8085/launch.html",
         "http://localhost:9009/*"
       ],
       "webOrigins": [
-        "*"
+        "http://localhost:8085",
+        "http://localhost:9009"
       ],
       "defaultClientScopes": [
         "openid",
@@ -118,12 +121,13 @@
         {
           "name": "patient-context",
           "protocol": "openid-connect",
-          "protocolMapper": "oidc-hardcoded-claim-mapper",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
           "config": {
             "claim.name": "patient",
-            "claim.value": "test-patient-1",
+            "user.attribute": "patient_id",
             "access.token.claim": "true",
-            "id.token.claim": "false"
+            "id.token.claim": "false",
+            "jsonType.label": "String"
           }
         },
         {
@@ -144,6 +148,9 @@
       "username": "fhir-admin",
       "enabled": true,
       "emailVerified": true,
+      "attributes": {
+        "patient_id": ["test-patient-1"]
+      },
       "credentials": [
         {
           "type": "password",
