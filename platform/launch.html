@@ -10,7 +10,6 @@
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self' https://cdn.jsdelivr.net https://launch.smarthealthit.org https://*.smarthealthit.org; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://cdn.jsdelivr.net https://launch.smarthealthit.org https://*.smarthealthit.org http://localhost:9009 http://localhost:8083 http://localhost:8080;" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <!-- X-Frame-Options removed - can only be set via HTTP header, not meta tag -->
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()" />
 
@@ -20,53 +19,78 @@
 <body>
     <script src="https://cdn.jsdelivr.net/npm/fhirclient/build/fhir-client.js"></script>
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const iss = urlParams.get('iss');
+        (function() {
+            var PICKER_URL = 'http://localhost:9009/patient-select.html';
 
-        const config = {
-            // The client_id below is a sample public client for a SMART sandbox.
-            // You can create your own client at https://smarthealthit.org/
-            client_id: 'smart_cds_platform',
-            // Provide a default issuer for standalone testing
-            // 注意: IBM FHIR Server 的路徑是 /fhir-server/ (不是 /fhir-server/api/v4/)
-            iss: 'http://localhost:8083/fhir-server',
-            // 使用 Keycloak 支持的 scope（SMART on FHIR scopes 已在 fhir-smart-scopes 中配置）
-            scope: 'openid profile fhirUser launch',
-            redirect_uri: './index.html',
-            completeInTarget: true
-        };
+            var urlParams = new URLSearchParams(window.location.search);
+            var iss = urlParams.get('iss');
+            var launch = urlParams.get('launch');
 
-        // Fix for SMART Launcher integration:
-        // If launching from local SMART Launcher (port 9009), redirect to real FHIR Server
-        // The real FHIR Server's metadata contains Keycloak OAuth endpoints
-        if (iss && iss.includes('localhost:9009')) {
-            console.log('Detected local SMART Launcher. Redirecting to real FHIR Server with Keycloak auth.');
-            
-            // Pass through the launch parameter from SMART Launcher (contains patient context)
-            const launch = urlParams.get('launch');
-            if (launch) {
-                // Decode the launch parameter to extract patient ID
+            // --- Step 1: Check if returning from Patient Picker with ?patient= ---
+            var pickerPatientId = urlParams.get('patient');
+            if (pickerPatientId) {
+                console.log('Patient selected from Picker:', pickerPatientId);
+                sessionStorage.setItem('smart_launcher_patient', pickerPatientId);
+
+                // Clean up URL: remove patient param, keep iss
+                var cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete('patient');
+                window.history.replaceState({}, '', cleanUrl.toString());
+
+                // Fall through to OAuth below
+            }
+
+            // --- Step 2: Try to extract patient from SMART Launcher launch context ---
+            var hasPatient = !!pickerPatientId || !!sessionStorage.getItem('smart_launcher_patient');
+
+            if (!hasPatient && launch) {
                 try {
-                    const launchData = JSON.parse(atob(launch));
+                    var launchData = JSON.parse(atob(launch));
                     console.log('Launch context:', launchData);
-                    // Store patient ID for later use (the token from Keycloak will have it)
                     if (launchData.b) {
                         sessionStorage.setItem('smart_launcher_patient', launchData.b);
+                        hasPatient = true;
                     }
                 } catch (e) {
                     console.log('Could not decode launch parameter');
                 }
             }
-            
-            // fhir-client reads iss from URL first, so we need to modify the URL
-            // Replace the URL iss parameter with the real FHIR Server URL
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.set('iss', 'http://localhost:8083/fhir-server');
-            window.history.replaceState({}, '', newUrl.toString());
-            console.log('Replaced URL iss to:', newUrl.searchParams.get('iss'));
-        }
 
-        FHIR.oauth2.authorize(config);
+            // --- Step 3: If no patient, redirect to Patient Picker ---
+            if (!hasPatient) {
+                console.log('No patient context found. Redirecting to Patient Picker.');
+                var returnUrl = new URL(window.location.href);
+                // If ISS was the launcher's, switch to real FHIR server for the return trip
+                if (iss && iss.includes('localhost:9009')) {
+                    returnUrl.searchParams.set('iss', 'http://localhost:8083/fhir-server');
+                }
+                // Remove launch param (it has no patient anyway)
+                returnUrl.searchParams.delete('launch');
+
+                var pickerUrl = PICKER_URL + '?returnUrl=' + encodeURIComponent(returnUrl.toString());
+                window.location.href = pickerUrl;
+                return; // Stop execution
+            }
+
+            // --- Step 4: Proceed with Keycloak OAuth ---
+            // Fix ISS: if launching from local SMART Launcher, redirect to real FHIR Server
+            if (iss && iss.includes('localhost:9009')) {
+                console.log('Detected local SMART Launcher. Redirecting ISS to real FHIR Server.');
+                var newUrl = new URL(window.location.href);
+                newUrl.searchParams.set('iss', 'http://localhost:8083/fhir-server');
+                window.history.replaceState({}, '', newUrl.toString());
+            }
+
+            var config = {
+                client_id: 'smart_cds_platform',
+                iss: 'http://localhost:8083/fhir-server',
+                scope: 'openid profile fhirUser launch',
+                redirect_uri: './index.html',
+                completeInTarget: true
+            };
+
+            FHIR.oauth2.authorize(config);
+        })();
     </script>
 </body>
 

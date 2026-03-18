@@ -14,14 +14,15 @@
         <feature>json-1.0</feature>
         <feature>websocket-1.1</feature>
         <feature>distributedMap-1.0</feature>
+        <feature>localConnector-1.0</feature>
     </featureManager>
 
     <httpEndpoint id="defaultHttpEndpoint" host="*" httpPort="9080" httpsPort="9443"/>
-    <keyStore id="defaultKeyStore" password="change-password" />
+    <keyStore id="defaultKeyStore" password="${env.KEYSTORE_PASSWORD}" />
 
     <!-- CORS Configuration -->
     <cors domain="/"
-      allowedOrigins="http://localhost:8085, http://localhost:9009, http://127.0.0.1:8085, http://127.0.0.1:9009, *"
+      allowedOrigins="http://localhost:8085, http://localhost:9009, http://127.0.0.1:8085, http://127.0.0.1:9009"
       allowCredentials="true"
       allowedHeaders="Origin, Content-Type, Accept, Authorization, X-FHIR-TENANT-ID, X-FHIR-DSID, X-Requested-With, Cache-Control"
       allowedMethods="GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD"
@@ -39,33 +40,31 @@
         tokenReuse="true"
         ignoreApplicationAuthMethod="true" />
 
-    <!-- FHIR Server Web Application -->
-    <webApplication id="fhir-server" 
-                    location="/opt/ol/wlp/usr/servers/defaultServer/apps/fhir-server.war" 
+    <!-- FHIR Server Web Application (sandbox: allow unauthenticated reads for Patient Picker) -->
+    <webApplication id="fhir-server"
+                    location="/opt/ol/wlp/usr/servers/defaultServer/apps/fhir-server.war"
                     name="fhir-server">
         <application-bnd>
             <security-role name="FHIRUsers">
                 <special-subject type="ALL_AUTHENTICATED_USERS" />
+                <special-subject type="EVERYONE" />
             </security-role>
         </application-bnd>
-        <classloader commonLibraryRef="fhirLibrary" />
+        <classloader commonLibraryRef="fhirUserLib" />
     </webApplication>
 
-    <library id="fhirLibrary">
-        <folder dir="/opt/ol/wlp/usr/servers/defaultServer/config/default" />
-        <folder dir="/opt/ol/wlp/usr/servers/defaultServer/userlib" />
+    <!-- User-contributed libraries -->
+    <library id="fhirUserLib">
+        <fileset dir="${server.config.dir}/userlib" includes="*.jar"/>
+        <folder dir="${server.config.dir}/config/default" />
     </library>
 
-    <!-- PostgreSQL DataSource -->
-    <dataSource id="fhirDataSource" jndiName="jdbc/fhirDataSource" type="javax.sql.DataSource">
-        <jdbcDriver libraryRef="postgresql-library"/>
-        <properties.postgresql serverName="db" portNumber="5432" databaseName="fhirdata" user="fhiruser" password="change-password"/>
-    </dataSource>
-
-    <library id="postgresql-library">
-        <fileset dir="/opt/ol/wlp/usr/servers/defaultServer/userlib" includes="postgresql-*.jar"/>
+    <!-- Derby shared library (required by configDropins/defaults/datasource.xml) -->
+    <library id="sharedLibDerby">
+        <fileset dir="${shared.resource.dir}/lib/derby" includes="*.jar"/>
     </library>
-    <include location="/opt/ol/wlp/usr/servers/defaultServer/configDropins/defaults/bulkdata.xml"/>
-    <include location="/opt/ol/wlp/usr/servers/defaultServer/configDropins/defaults/open-default-port.xml"/>
+
+    <include location="${server.config.dir}/configDropins/defaults/bulkdata.xml"/>
+    <include location="${server.config.dir}/configDropins/defaults/open-default-port.xml"/>
 
 </server>

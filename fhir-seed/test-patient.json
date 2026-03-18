@@ -1,0 +1,42 @@
+{
+  "resourceType": "Patient",
+  "id": "test-patient-1",
+  "meta": {
+    "profile": [
+      "http://hl7.org/fhir/StructureDefinition/Patient"
+    ]
+  },
+  "identifier": [
+    {
+      "system": "http://hospital.example.org/patients",
+      "value": "TP-001"
+    }
+  ],
+  "active": true,
+  "name": [
+    {
+      "use": "official",
+      "text": "王大明",
+      "family": "Wang",
+      "given": ["Da-Ming"]
+    }
+  ],
+  "gender": "male",
+  "birthDate": "1975-03-15",
+  "telecom": [
+    {
+      "system": "phone",
+      "value": "0912-345-678",
+      "use": "mobile"
+    }
+  ],
+  "address": [
+    {
+      "use": "home",
+      "text": "桃園市龜山區復興街5號",
+      "city": "桃園市",
+      "district": "龜山區",
+      "country": "TW"
+    }
+  ]
+}

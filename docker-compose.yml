@@ -3,9 +3,9 @@ services:
     image: postgres:14-alpine
     container_name: postgres_db
     environment:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: kcuser
-      POSTGRES_PASSWORD: kcpassword
+      POSTGRES_DB: ${POSTGRES_DB:-keycloak}
+      POSTGRES_USER: ${POSTGRES_USER:-kcuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kcpassword}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d
@@ -13,7 +13,7 @@ services:
       - fhirnet
     restart: unless-stopped
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U kcuser -d keycloak" ]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-kcuser} -d $${POSTGRES_DB:-keycloak}" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -27,14 +27,15 @@ services:
       db:
         condition: service_healthy
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://db/keycloak
-      KC_DB_USERNAME: kcuser
-      KC_DB_PASSWORD: kcpassword
+      KC_DB_URL: jdbc:postgresql://db/${POSTGRES_DB:-keycloak}
+      KC_DB_USERNAME: ${POSTGRES_USER:-kcuser}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-kcpassword}
       KC_HTTP_PORT: 8080
-      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_STRICT_BACKCHANNEL: "false"
       KC_HTTP_CONTENT_SECURITY_POLICY: "frame-ancestors 'self' http://localhost:9009 http://localhost:8085 http://127.0.0.1:8085;"
     volumes:
       - ./keycloak-data/fhir-realm.json:/opt/keycloak/data/import/fhir-realm.json
@@ -85,6 +86,8 @@ services:
     container_name: smart-launcher
     ports:
       - "9009:80"
+    volumes:
+      - ./patient-picker/patient-select.html:/app/static/patient-select.html:ro
     environment:
       BASE_URL: http://localhost:9009
       FHIR_SERVER_R4: http://fhir-server:8080/fhir
@@ -94,6 +97,25 @@ services:
       TOKEN_SERVER_R4: http://keycloak:8080/realms/fhir/protocol/openid-connect/token
     networks:
       - fhirnet
+
+  fhir-seed:
+    image: curlimages/curl:latest
+    container_name: fhir-seed
+    depends_on:
+      - fhir-server
+      - keycloak
+    volumes:
+      - ./fhir-seed/seed-data.sh:/seed/seed-data.sh:ro
+      - ./fhir-seed/test-patient.json:/seed/test-patient.json:ro
+    entrypoint: ["sh", "/seed/seed-data.sh"]
+    environment:
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-hapi-fhir-client}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-hapi-secret}
+      FHIR_ADMIN_USER: ${FHIR_ADMIN_USER:-fhir-admin}
+      FHIR_ADMIN_PASSWORD: ${FHIR_ADMIN_PASSWORD:-fhir-admin}
+    networks:
+      - fhirnet
+    restart: "no"
 
   platform:
     build: ./MEDCALCEHR
