@@ -44,27 +44,41 @@ services:
       - fhirnet
 
   fhir-server:
-    image: ibmcom/ibm-fhir-server:latest
+    image: hapiproject/hapi:latest
     container_name: fhir-server
     depends_on:
-      keycloak:
-        condition: service_started
+      db:
+        condition: service_healthy
     volumes:
-      # 使用相對路徑，確保從專案目錄載入配置
-      - ./fhir-server/config:/opt/ol/wlp/usr/servers/defaultServer/config
-      - ./fhir-server/config/server.xml:/opt/ol/wlp/usr/servers/defaultServer/server.xml
-      - ./fhir-server/userlib:/opt/ol/wlp/usr/servers/defaultServer/userlib
-      # - fhir_data:/opt/ol/wlp/usr/servers/defaultServer/derby
-    ports:
-      - "8083:9080" # HTTP
-      - "8443:9443" # HTTPS
+      - ./hapi-fhir/application.yaml:/app/config/application.yaml
     environment:
-      - BOOTSTRAP_DB=true
-      - FHIR_IGNORE_TRANS_SECURITY=true
-      - FHIR_CONFIG_DIR=/opt/ol/wlp/usr/servers/defaultServer/config
+      SPRING_CONFIG_LOCATION: file:///app/config/application.yaml
+    ports:
+      - "8083:8080"
     networks:
       - fhirnet
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -sf http://localhost:8080/fhir/metadata > /dev/null || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 60s
+
+  seed-data:
+    image: curlimages/curl:latest
+    container_name: seed-data
+    depends_on:
+      fhir-server:
+        condition: service_healthy
+    volumes:
+      - ./hapi-fhir/load-seed-data.sh:/load-seed-data.sh
+      - ./hapi-fhir/seed-data.json:/seed-data.json
+    entrypoint: ["sh", "/load-seed-data.sh"]
+    environment:
+      FHIR_URL: http://fhir-server:8080/fhir
+    networks:
+      - fhirnet
 
   smart-launcher:
     image: smartonfhir/smart-launcher:latest
@@ -72,23 +86,17 @@ services:
     ports:
       - "9009:80"
     environment:
-      # 對外 URL (瀏覽器訪問用)
       BASE_URL: http://localhost:9009
-      # 對內 URL (容器間通訊用) - 使用 Docker 網路服務名稱
-      # 注意: IBM FHIR Server 的路徑是 /fhir-server/ (不是 /fhir-server/api/v4/)
-      FHIR_SERVER_R4: http://fhir-server:9080/fhir-server
-      # 對外 URL (瀏覽器用來顯示病人選擇器)
-      PICKER_CONFIG_R4_FHIR_URL: http://localhost:8083/fhir-server
+      FHIR_SERVER_R4: http://fhir-server:8080/fhir
+      PICKER_CONFIG_R4_FHIR_URL: http://localhost:8083/fhir
       PICKER_CONFIG_R4_IFRAME_LAUNCH: "false"
-      # Keycloak URL - 對外給瀏覽器使用
       AUTH_SERVER_R4: http://localhost:8080/realms/fhir/protocol/openid-connect/auth
-      # Keycloak URL - 對內給 token 交換使用 (使用 Docker 內部網路地址)
       TOKEN_SERVER_R4: http://keycloak:8080/realms/fhir/protocol/openid-connect/token
     networks:
       - fhirnet
 
   platform:
-    build: ./platform
+    build: ./MEDCALCEHR
     container_name: platform
     ports:
       - "8085:80"
@@ -98,8 +106,6 @@ services:
 volumes:
   postgres_data:
     name: postgres_data
-  fhir_data:
-    name: fhir_data
 
 networks:
   fhirnet:
