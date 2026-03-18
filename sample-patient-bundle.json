@@ -1,0 +1,505 @@
+{
+  "resourceType": "Bundle",
+  "id": "precise-hbr-sample-bundle",
+  "type": "searchset",
+  "total": 15,
+  "entry": [
+    {
+      "fullUrl": "Patient/twcore-patient-001",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "twcore-patient-001",
+        "meta": {
+          "profile": [
+            "https://twcore.mohw.gov.tw/ig/twcore/StructureDefinition/Patient-twcore"
+          ]
+        },
+        "identifier": [
+          {
+            "system": "http://www.moi.gov.tw/",
+            "value": "A123456789",
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "N123456789",
+                  "display": "National Person Identifier"
+                }
+              ]
+            }
+          },
+          {
+            "system": "https://www.tph.mohw.gov.tw/",
+            "value": "MRN-20240001",
+            "type": {
+              "coding": [
+                {
+                  "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                  "code": "MR",
+                  "display": "Medical record number"
+                }
+              ]
+            }
+          }
+        ],
+        "name": [
+          {
+            "use": "official",
+            "text": "陳大明"
+          },
+          {
+            "use": "official",
+            "family": "Chen",
+            "given": [
+              "Da-Ming"
+            ]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1956-08-15"
+      }
+    },
+    {
+      "fullUrl": "Observation/obs-hemoglobin-001",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-hemoglobin-001",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "718-7",
+              "display": "Hemoglobin [Mass/volume] in Blood"
+            }
+          ],
+          "text": "血紅素"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "effectiveDateTime": "2026-03-10T08:30:00+08:00",
+        "valueQuantity": {
+          "value": 10.2,
+          "unit": "g/dL",
+          "system": "http://unitsofmeasure.org",
+          "code": "g/dL"
+        }
+      }
+    },
+    {
+      "fullUrl": "Observation/obs-creatinine-001",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-creatinine-001",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2160-0",
+              "display": "Creatinine [Mass/volume] in Serum or Plasma"
+            }
+          ],
+          "text": "肌酐酸"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "effectiveDateTime": "2026-03-10T08:30:00+08:00",
+        "valueQuantity": {
+          "value": 2.1,
+          "unit": "mg/dL",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/dL"
+        }
+      }
+    },
+    {
+      "fullUrl": "Observation/obs-egfr-001",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-egfr-001",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "33914-3",
+              "display": "eGFR by MDRD"
+            }
+          ],
+          "text": "腎絲球過濾率"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "effectiveDateTime": "2026-03-10T08:30:00+08:00",
+        "valueQuantity": {
+          "value": 28,
+          "unit": "mL/min/1.73m2",
+          "system": "http://unitsofmeasure.org",
+          "code": "mL/min/{1.73_m2}"
+        }
+      }
+    },
+    {
+      "fullUrl": "Observation/obs-wbc-001",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-wbc-001",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "6690-2",
+              "display": "Leukocytes [#/volume] in Blood"
+            }
+          ],
+          "text": "白血球"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "effectiveDateTime": "2026-03-10T08:30:00+08:00",
+        "valueQuantity": {
+          "value": 11.2,
+          "unit": "10*3/uL",
+          "system": "http://unitsofmeasure.org",
+          "code": "10*3/uL"
+        }
+      }
+    },
+    {
+      "fullUrl": "Observation/obs-platelets-001",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-platelets-001",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "26515-7",
+              "display": "Platelets [#/volume] in Blood"
+            }
+          ],
+          "text": "血小板"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "effectiveDateTime": "2026-03-10T08:30:00+08:00",
+        "valueQuantity": {
+          "value": 82,
+          "unit": "10*3/uL",
+          "system": "http://unitsofmeasure.org",
+          "code": "10*3/uL"
+        }
+      }
+    },
+    {
+      "fullUrl": "Observation/obs-smoking-001",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-smoking-001",
+        "status": "final",
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "72166-2",
+              "display": "Tobacco smoking status"
+            }
+          ],
+          "text": "吸菸狀態"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "effectiveDateTime": "2026-03-10T09:00:00+08:00",
+        "valueCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "449868002",
+              "display": "Current every day smoker"
+            }
+          ],
+          "text": "目前每日吸菸"
+        }
+      }
+    },
+    {
+      "fullUrl": "Condition/cond-gi-bleeding-001",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-gi-bleeding-001",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "K92.2",
+              "display": "Gastrointestinal hemorrhage, unspecified"
+            }
+          ],
+          "text": "消化道出血史"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "onsetDateTime": "2025-06-20"
+      }
+    },
+    {
+      "fullUrl": "Condition/cond-liver-cirrhosis-001",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-liver-cirrhosis-001",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "K74.60",
+              "display": "Unspecified cirrhosis of liver"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "19943007",
+              "display": "Cirrhosis of liver"
+            }
+          ],
+          "text": "肝硬化"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "onsetDateTime": "2023-01-10"
+      }
+    },
+    {
+      "fullUrl": "Condition/cond-portal-htn-001",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-portal-htn-001",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "K76.6",
+              "display": "Portal hypertension"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "56265001",
+              "display": "Portal hypertension"
+            }
+          ],
+          "text": "門脈高壓"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "onsetDateTime": "2023-03-15"
+      }
+    },
+    {
+      "fullUrl": "Condition/cond-nstemi-001",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-nstemi-001",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "I21.4",
+              "display": "Acute subendocardial myocardial infarction"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "164868009",
+              "display": "Non-ST elevation myocardial infarction"
+            }
+          ],
+          "text": "非ST段上升型心肌梗塞 (NSTEMI)"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "onsetDateTime": "2026-03-08"
+      }
+    },
+    {
+      "fullUrl": "Condition/cond-diabetes-001",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-diabetes-001",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-cm",
+              "code": "E11.9",
+              "display": "Type 2 diabetes mellitus without complications"
+            },
+            {
+              "system": "http://snomed.info/sct",
+              "code": "73211009",
+              "display": "Diabetes mellitus"
+            }
+          ],
+          "text": "第二型糖尿病"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "onsetDateTime": "2018-05-20"
+      }
+    },
+    {
+      "fullUrl": "MedicationRequest/medrq-warfarin-001",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "medrq-warfarin-001",
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+                "code": "outpatient",
+                "display": "Outpatient"
+              }
+            ]
+          }
+        ],
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "https://twcore.mohw.gov.tw/ig/twcore/CodeSystem/medication-nhi-tw",
+              "code": "BC27783100",
+              "display": "COUMADIN TAB 5MG (WARFARIN SODIUM)"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "11289",
+              "display": "Warfarin"
+            }
+          ],
+          "text": "可邁丁 Warfarin 5mg"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "authoredOn": "2026-03-08"
+      }
+    },
+    {
+      "fullUrl": "MedicationRequest/medrq-clopidogrel-001",
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "medrq-clopidogrel-001",
+        "status": "active",
+        "intent": "order",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/medicationrequest-category",
+                "code": "outpatient",
+                "display": "Outpatient"
+              }
+            ]
+          }
+        ],
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "https://twcore.mohw.gov.tw/ig/twcore/CodeSystem/medication-nhi-tw",
+              "code": "BC22391100",
+              "display": "PLAVIX TAB 75MG (CLOPIDOGREL)"
+            },
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "32968",
+              "display": "Clopidogrel"
+            }
+          ],
+          "text": "保栓通 Clopidogrel 75mg"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "authoredOn": "2026-03-08"
+      }
+    },
+    {
+      "fullUrl": "Procedure/proc-pci-001",
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "proc-pci-001",
+        "status": "completed",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "397682003",
+              "display": "Percutaneous transluminal coronary angioplasty"
+            },
+            {
+              "system": "http://hl7.org/fhir/sid/icd-10-pcs",
+              "code": "02703ZZ",
+              "display": "Dilation of Coronary Artery, One Artery, Percutaneous Approach"
+            }
+          ],
+          "text": "經皮冠狀動脈介入術 (PCI)"
+        },
+        "subject": {
+          "reference": "Patient/twcore-patient-001"
+        },
+        "performedDateTime": "2026-03-09T14:30:00+08:00"
+      }
+    }
+  ]
+}

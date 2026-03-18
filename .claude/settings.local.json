@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd D:/SMART-on-FHIR-Platform && docker-compose up -d --build 2>&1)",
+      "Bash(docker ps:*)",
+      "Bash(cd D:/SMART-on-FHIR-Platform && docker-compose up -d 2>&1)",
+      "Bash(docker run:*)",
+      "Bash(git pull:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker exec:*)",
+      "Bash(openssl req:*)",
+      "Bash(MSYS_NO_PATHCONV=1 openssl req -x509 -nodes -days 365 \\\\\n  -newkey rsa:2048 \\\\\n  -keyout D:/SMART-on-FHIR-Platform/nginx/certs/selfsigned.key \\\\\n  -out D:/SMART-on-FHIR-Platform/nginx/certs/selfsigned.crt \\\\\n  -subj \"/C=TW/ST=Local/L=Local/O=Dev/CN=localhost\" \\\\\n  -addext \"subjectAltName=DNS:localhost,IP:127.0.0.1\")",
+      "Bash(docker inspect:*)",
+      "Bash(ssh:*)"
+    ]
+  }
+}

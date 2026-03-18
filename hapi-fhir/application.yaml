@@ -1,0 +1,50 @@
+spring:
+  main:
+    allow-circular-references: true
+  datasource:
+    url: jdbc:postgresql://db:5432/fhirdata
+    username: fhiruser
+    password: change-password
+    driverClassName: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+      hibernate.search.enabled: false
+      hibernate.format_sql: false
+      hibernate.show_sql: false
+      hibernate.hbm2ddl.auto: update
+      hibernate.jdbc.batch_size: 20
+      hibernate.cache.use_query_cache: false
+      hibernate.cache.use_second_level_cache: false
+      hibernate.cache.use_structured_entries: false
+      hibernate.cache.use_minimal_puts: false
+  flyway:
+    enabled: false
+  batch:
+    job:
+      enabled: false
+
+hapi:
+  fhir:
+    fhir_version: R4
+    server_address: https://localhost:8083/fhir
+    defer_indexing_for_codesystems_of_size: 101
+    default_page_size: 20
+    max_page_size: 200
+    allow_external_references: true
+    allow_multiple_delete: true
+    allow_placeholder_references: true
+    reuse_cached_search_results_millis: 60000
+    cors:
+      enabled: true
+      allow_credentials: true
+      allowed_origin:
+        - "https://localhost:8085"
+        - "https://localhost:9009"
+        - "https://localhost:8180"
+    tester:
+      home:
+        name: Local Tester
+        server_address: https://localhost:8083/fhir
+        refuse_to_fetch_third_party_urls: false
+        fhir_version: R4

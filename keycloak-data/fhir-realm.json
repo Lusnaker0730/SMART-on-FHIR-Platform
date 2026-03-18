@@ -2,8 +2,7 @@
   "realm": "fhir",
   "loginTheme": "keycloak",
   "browserSecurityHeaders": {
-    "xFrameOptions": "ALLOW-FROM http://localhost:9009",
-    "contentSecurityPolicy": "frame-ancestors 'self' http://localhost:9009 http://localhost:8085;"
+    "contentSecurityPolicy": "frame-ancestors 'self' https://localhost:9009 https://localhost:8085 https://localhost:8180;"
   },
   "enabled": true,
   "clients": [
@@ -15,8 +14,8 @@
       "directAccessGrantsEnabled": true,
       "protocol": "openid-connect",
       "redirectUris": [
-        "http://localhost:8083/*",
-        "http://localhost:8080/*"
+        "https://localhost:8083/*",
+        "https://localhost:8180/*"
       ],
       "defaultClientScopes": [
         "openid",
@@ -36,21 +35,19 @@
       "authorizationServicesEnabled": false,
       "clientAuthenticatorType": "none",
       "redirectUris": [
-        "http://localhost:8085/index.html",
-        "http://localhost:8085/launch.html",
-        "http://localhost:9009/*"
+        "https://localhost:8085/index.html",
+        "https://localhost:8085/launch.html",
+        "https://localhost:9009/*"
       ],
       "webOrigins": [
-        "http://localhost:8085",
-        "http://localhost:9009"
+        "https://localhost:8085",
+        "https://localhost:9009"
       ],
       "defaultClientScopes": [
         "openid",
         "profile",
         "email",
-        "fhir-smart-scopes"
-      ],
-      "optionalClientScopes": [
+        "fhir-smart-scopes",
         "launch",
         "fhirUser"
       ]
@@ -63,10 +60,10 @@
       "directAccessGrantsEnabled": true,
       "protocol": "openid-connect",
       "redirectUris": [
-        "http://localhost:9009/*"
+        "https://localhost:9009/*"
       ],
       "webOrigins": [
-        "http://localhost:9009"
+        "https://localhost:9009"
       ]
     }
   ],

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-FHIR_BASE="http://fhir-server:9080/fhir-server"
+FHIR_BASE="http://fhir-server:8080/fhir"
 KEYCLOAK_URL="http://keycloak:8080/realms/fhir/protocol/openid-connect/token"
 CLIENT_ID="${KEYCLOAK_CLIENT_ID:-hapi-fhir-client}"
 CLIENT_SECRET="${KEYCLOAK_CLIENT_SECRET:-hapi-secret}"
